@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8"/>
+    <title>GigaChat Demo</title>
+    <style>
+        html, body {
+          margin: 0;
+          padding: 0;
+          font-family: Arial, sans-serif;
+          height: 100%;
+          background: #fafafa;
+        }
+        .container {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          padding: 5%;
+          box-sizing: border-box;
+        }
+        #response {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          text-align: left;
+          font-size: 1.2em;
+          color: #333;
+          padding: 2.5% 15px 0 15px;
+          overflow-y: auto;
+          background: #e8e8e0;
+          border-radius: 16px;
+          margin-bottom: 20px;
+        }
+        .message {
+          margin-bottom: 15px;
+          padding: 10px 12px;
+          border-radius: 8px;
+        }
+        .message.user {
+          background: #d4e9ff;
+          margin-left: 20%;
+          text-align: left;
+        }
+        .message.agent {
+          background: #f0f0f0;
+          margin-right: 20%;
+          text-align: left;
+        }
+        .message-header {
+          font-weight: bold;
+          font-size: 0.9em;
+          color: #555;
+          margin-bottom: 5px;
+        }
+        .message-time {
+          font-size: 0.75em;
+          color: #888;
+          margin-left: 10px;
+        }
+        .message-content {
+          white-space: pre-wrap;
+          word-wrap: break-word;
+        }
+        #input-box {
+          display: flex;
+          gap: 20px;
+          align-items: flex-end;
+        }
+        .textarea-wrapper {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        }
+        .hint {
+          margin-bottom: 5px;
+          font-size: 0.85em;
+          color: #666;
+        }
+        textarea {
+          width: 100%;
+          height: 6em;
+          resize: vertical;
+          padding: 10px;
+          font-size: 1em;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          font-family: Arial, sans-serif;
+        }
+        .right-section {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          align-items: flex-start;
+          min-width: fit-content;
+          margin-left: 20px;
+        }
+        .password-section {
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+          align-items: flex-start;
+          width: 100%;
+        }
+        .status-message {
+          font-size: 0.9em;
+          height: 20px;
+          min-height: 20px;
+        }
+        .warning {
+          color: #dc3545;
+          font-weight: bold;
+        }
+        .success {
+          color: #28a745;
+          font-weight: bold;
+        }
+        .password-input {
+          width: 100%;
+          padding: 8px 12px;
+          font-size: 0.95em;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          color: rgba(0, 0, 0, 0.7);
+          box-sizing: border-box;
+        }
+        .password-input::placeholder {
+          color: rgba(0, 0, 0, 0.3);
+        }
+        button {
+          width: 100%;
+          padding: 10px 20px;
+          font-size: 1em;
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          white-space: nowrap;
+          box-sizing: border-box;
+        }
+        button:hover {
+          background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="response"></div>
+    <div id="input-box">
+        <div class="textarea-wrapper">
+            <div class="hint">Enter - отправить | Shift+Enter - новая строка</div>
+            <textarea id="input" placeholder="Введите сообщение..." maxlength="10000"></textarea>
+        </div>
+        <div class="right-section">
+            <div class="password-section">
+                <div class="status-message" id="statusMessage"></div>
+                <input type="password" id="password" class="password-input" placeholder="Пароль">
+                <div class="status-message" id="warning"></div>
+            </div>
+            <button id="send">Отправить</button>
+        </div>
+    </div>
+</div>
+<script>
+    const respBox = document.getElementById('response');
+    const input = document.getElementById('input');
+    const btn = document.getElementById('send');
+    const passwordInput = document.getElementById('password');
+    const statusMessage = document.getElementById('statusMessage');
+    const warningBox = document.getElementById('warning');
+
+    let failCount = 0;
+    let history = [];
+    let passwordSet = false;
+
+    function formatTime(date) {
+        return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function addMessage(role, content) {
+        const time = formatTime(new Date());
+        const msg = { role, content, time };
+        history.push(msg);
+
+        const messageEl = document.createElement('div');
+        messageEl.className = `message ${role}`;
+
+        const headerEl = document.createElement('div');
+        headerEl.className = 'message-header';
+        headerEl.textContent = role === 'user' ? 'Пользователь' : 'Агент';
+        headerEl.innerHTML += `<span class="message-time">${time}</span>`;
+
+        const contentEl = document.createElement('div');
+        contentEl.className = 'message-content';
+        contentEl.textContent = content;
+
+        messageEl.appendChild(headerEl);
+        messageEl.appendChild(contentEl);
+        respBox.appendChild(messageEl);
+        respBox.scrollTop = respBox.scrollHeight;
+    }
+
+    async function sendRequest() {
+        const q = input.value.trim();
+        if (!q) return;
+
+        const pwd = passwordInput.value;
+
+        try {
+            addMessage('user', q);
+
+            const r = await fetch('/api/verify-and-ask', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({question: q, password: pwd, history: history})
+            });
+            const d = await r.json();
+            if (r.ok) {
+                addMessage('agent', d.answer);
+                input.value = "";
+                failCount = 0;
+                statusMessage.textContent = "";
+                statusMessage.classList.remove('show');
+                warningBox.textContent = "✓ Success";
+                warningBox.className = "status-message success";
+                passwordSet = true;
+                passwordInput.disabled = true;
+            } else {
+                if (d.error === "wrong_password") {
+                    failCount++;
+                    statusMessage.textContent = "Ошибок: " + failCount;
+                    statusMessage.classList.add('show');
+                    warningBox.textContent = "❌ Неправильный пароль!";
+                    warningBox.className = "status-message warning";
+                    history.pop();
+                    respBox.removeChild(respBox.lastChild);
+                } else if (d.error === "empty_password") {
+                    warningBox.textContent = "❌ Введите пароль!";
+                    warningBox.className = "status-message warning";
+                    history.pop();
+                    respBox.removeChild(respBox.lastChild);
+                } else {
+                    warningBox.textContent = "Ошибка: " + (d.error || "неизвестно");
+                    history.pop();
+                    respBox.removeChild(respBox.lastChild);
+                }
+            }
+        } catch (e) {
+            warningBox.textContent = "Ошибка сети: " + e.message;
+            history.pop();
+            respBox.removeChild(respBox.lastChild);
+        }
+    }
+
+    btn.onclick = sendRequest;
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            if (e.shiftKey) {
+                return;
+            } else {
+                e.preventDefault();
+                sendRequest();
+            }
+        }
+    });
+</script>
+</body>
+</html>
