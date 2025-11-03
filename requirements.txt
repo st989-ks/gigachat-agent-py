@@ -1,0 +1,49 @@
+# GigaChat Agent - Requirements
+
+# LLM и API
+langchain-core==0.3.61
+langchain-gigachat==0.3.12
+
+# Web Framework
+fastapi>=0.104.0
+uvicorn>=0.24.0
+pydantic>=2.0.0
+
+# HTTP и Web Scraping
+aiohttp>=3.9.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+
+# Data Processing
+pandas>=2.0.0
+pyyaml>=6.0
+jsonschema>=4.19.0
+
+# Version Control
+GitPython>=3.1.0
+
+# Utilities
+python-dotenv>=1.0.0
+python-multipart>=0.0.6
+
+# Database (опционально)
+sqlalchemy>=2.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+
+# Development
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.5.0
+isort>=5.12.0
+
+# Logging и Monitoring
+python-json-logger>=2.0.0
+
+# Math
+sympy>=1.12
+numpy>=1.24.0
+scipy>=1.11.0
