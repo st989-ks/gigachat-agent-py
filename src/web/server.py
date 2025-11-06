@@ -24,7 +24,7 @@ import os
 
 # Импорты из проекта
 from src.gigachat_client.client import GigaChatClient
-from src.gigachat_client.agents import get_catalog
+from src.gigachat_client.catalog_agents import get_catalog
 from src.session.session_manager import get_session_manager
 from src.config.constants import DEFAULT_AGENT_TEMPERATURE, LOG_FORMAT
 
@@ -114,6 +114,10 @@ class ModelConfig(BaseModel):
     response_format: Optional[Dict[str, str]] = None
 
 
+def get_time_now() -> str:
+    return datetime.now().strftime("%H:%M")
+
+
 # ===== HTTP эндпоинты =====
 
 @app.get("/", response_class=HTMLResponse)
@@ -198,14 +202,12 @@ async def verify(request: Request, auth: Auth):
             logger.info(f"welcome_message = {welcome_message}")
             logger.info(f"✅ Приветственное сообщение сгенерировано")
 
-            # Сохраняем приветствие в историю
-            timestamp = datetime.now().strftime("%H:%M")
             await session_manager.add_to_history(
                 session_id,
                 agent_key=gigachat_client.get_current_agent().id,
                 role="agent",
                 content=welcome_message,
-                timestamp=timestamp
+                timestamp=get_time_now()
             )
 
             history = await session_manager.get_history(session_id)
@@ -254,12 +256,19 @@ async def verify(request: Request, auth: Auth):
     agent = get_catalog().get_agent_by_key(agent_key) if agent_key else None
 
     if agent:
-        gigachat_client.set_agent(agent)
+        message = gigachat_client.set_agent(agent)
+        if message:
+            await session_manager.add_to_history(
+                session_id,
+                agent_key=gigachat_client.get_current_agent().id,
+                role="agent",
+                content=message.content,
+                timestamp=get_time_now()
+            )
 
     # ===== Получение истории из сессии =====
     history = await session_manager.get_history(session_id)
     logger.info(f"📜 История получена: {len(history)} сообщений")
-
     # ===== Формирование ответа =====
     response = JSONResponse(QuestionResponse(history=history).model_dump())
     response.set_cookie(
@@ -308,7 +317,7 @@ async def question(request: Request, question_user: Question):
         agent_key=gigachat_client.get_current_agent().id,
         role="user",  # ← роль пользователя
         content=question_user.question,
-        timestamp=datetime.now().strftime("%H:%M")
+        timestamp=get_time_now()
     )
 
     message = gigachat_client.chat(
@@ -323,7 +332,7 @@ async def question(request: Request, question_user: Question):
         agent_key=gigachat_client.get_current_agent().id,
         role="agent",
         content=message,
-        timestamp=datetime.now().strftime("%H:%M")
+        timestamp=get_time_now()
     )
 
     history = await session_manager.get_history(session_id)
@@ -465,7 +474,16 @@ async def set_model_response_format(request: Request, config: ModelConfig):
         )
     agent = agent_catalog.get_agent_by_key(config.agent_key)
     if agent:
-        gigachat_client.set_agent(agent)
+        message = gigachat_client.set_agent(agent)
+        if message:
+            await session_manager.add_to_history(
+                session_id,
+                agent_key=gigachat_client.get_current_agent().id,
+                role="agent",
+                content=message.content,
+                timestamp=get_time_now()
+            )
+
         logger.info(f"⚙️ Конфигурация модели обновлена")
         return JSONResponse({
             "success": True,

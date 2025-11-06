@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from enum import Enum
 from pathlib import Path
-from typing import Final
+from typing import Final, Dict
 from langchain_core.messages import SystemMessage, HumanMessage
 
 # ПУТИ И ДИРЕКТОРИИ
@@ -107,6 +107,17 @@ DEFAULT_SYSTEM_PROMPT: Final[str] = (
     "Ты в меру вежлив, но не проч и дерзить, но с умом."
     "Можешь помочь сориентировать пользователя по проекту."
 )
+
+PROMPT_MAP: Dict[str, str] = {
+    "[JSON]": (
+        "4.  Пишешь только формат [JSON], выводи ТОЛЬКО валидный JSON без текста вне структуры.\n"
+        "ВАЖНО: Если поля не совпадают с примером, используй точно такие же имена!\n"
+    ),
+    "[XML]": (
+        "4. Пишешь только формат [XML], выводи ТОЛЬКО XML с корректной иерархией.\n"
+        "ВАЖНО: Если поля не совпадают с примером, используй точно такие же имена!\n"
+    ),
+}
 
 DEFAULT_SYSTEM_MESSAGE: Final[SystemMessage] = SystemMessage(
     content=("Ты дефолтный агент."
