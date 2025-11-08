@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GigaChat Agent</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- Экран авторизации -->
+<div id="authScreen" class="auth-screen">
+    <div class="auth-container">
+        <h1>GigaChat Agent</h1>
+        <div class="form-group">
+            <label for="passwordInput" class="form-label">Пароль</label>
+            <input
+                    type="password"
+                    id="passwordInput"
+                    class="form-control"
+                    placeholder="Введите пароль"
+                    autocomplete="current-password"
+            >
+        </div>
+        <button id="loginBtn" class="btn btn--primary btn--full-width">Авторизоваться</button>
+        <div id="authError" class="error-message hidden"></div>
+    </div>
+</div>
+
+<!-- Экран чата -->
+<div id="chatScreen" class="chat-screen hidden">
+    <!-- Левая панель с кнопками -->
+    <div class="left-panel">
+        <div class="control-group">
+            <!-- Выбор системы агентов -->
+            <div class="form-group">
+                <label for="agentSystemSelector" class="form-label">Система агентов</label>
+                <select id="agentSystemSelector" class="form-control agent-selector">
+                    <option value="">Выберите систему агентов</option>
+                </select>
+            </div>
+
+            <!-- Кнопка настроек -->
+            <button id="settingsBtn" class="btn btn--secondary settings-btn" title="Настройки формата ответа">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m-2 2l-4.2 4.2m13.2-5.2l-4.2-4.2m-2 2l-4.2-4.2"></path>
+                </svg>
+                Настройки
+            </button>
+
+            <!-- Кнопка очистки чата -->
+            <button id="clearChatBtn" class="btn btn--secondary clear-chat-btn" title="Очистить историю чата">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Очистить чат
+            </button>
+        </div>
+    </div>
+
+    <!-- Основная область чата -->
+    <div class="chat-container">
+        <!-- История сообщений -->
+        <div id="messageArea" class="message-area"></div>
+
+        <!-- Статус загрузки -->
+        <div id="loadingIndicator" class="loading-indicator hidden">
+            <span class="loading-spinner"></span>
+            <span>Ожидание ответа...</span>
+        </div>
+
+        <!-- Поле ввода -->
+        <div class="input-area">
+                <textarea
+                        id="messageInput"
+                        class="form-control message-input"
+                        placeholder="Введите сообщение... (Enter для отправки, Shift+Enter для новой строки)"
+                        rows="3"
+                ></textarea>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно настроек -->
+<div id="settingsModal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Настройки формата ответа</h3>
+            <button id="closeModalBtn" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="formatSelector" class="form-label">Формат ответа</label>
+                <select id="formatSelector" class="form-control">
+                    <option value="[DEFAULT]">[DEFAULT]</option>
+                    <option value="[JSON]">[JSON]</option>
+                    <option value="[XML]">[XML]</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="formatDescription" class="form-label">Описание/Схема формата</label>
+                <textarea
+                        id="formatDescription"
+                        class="form-control format-textarea"
+                        placeholder="Введите описание или схему формата..."
+                        rows="6"
+                ></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="cancelModalBtn" class="btn btn--secondary">Отмена</button>
+            <button id="applyFormatBtn" class="btn btn--primary">Применить</button>
+        </div>
+        <div id="modalError" class="error-message hidden"></div>
+    </div>
+</div>
+
+<!-- Уведомления -->
+<div id="notification" class="notification hidden"></div>
+
+<script src="./script.js"></script>
+</body>
+</html>

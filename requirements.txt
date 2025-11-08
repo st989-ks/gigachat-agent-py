@@ -1,3 +1,5 @@
+gigachat
+starlette
 # GigaChat Agent - Requirements
 
 # LLM и API

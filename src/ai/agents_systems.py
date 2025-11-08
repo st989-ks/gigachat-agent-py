@@ -1,0 +1,7 @@
+from enum import Enum
+
+
+class AgentsSystem(str, Enum):
+    DEFAULT = "DEFAULT"
+    TECHNICAL_SPECIFICATION = "TECHNICAL_SPECIFICATION"
+    COMPARE_ANSWERS = "COMPARE_ANSWERS"
