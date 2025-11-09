@@ -101,13 +101,13 @@ class SessionManager:
 
         if session_file.exists():
             session = await self._read_json(session_file)
-            logger.info(f"Создана новая сессия сессии {session_id}")
+            logger.info(f"✅ Сессия загружена: {session_id}")
             if session:
                 return session
 
         session = self._default_session(session_id)
         await self._write_json_atomic(session_file, session)
-        logger.info("Session created: %s", session_id)
+        logger.info("📝 Новая сессия создана: %s", session_id)
         return session
 
     async def verify_session(self, session_id: str, cookie_password_salt: str) -> Optional[str]:

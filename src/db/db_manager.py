@@ -78,7 +78,7 @@ class DbManager:
             logger.info(f"Сообщение добавлено: ID={message_with_id.id}, session={message_with_id.session_id}")
             return message_with_id
         except Exception as e:
-            logger.error(f"Ошибка добавления сообщения: {e}")
+            logger.error(f"Ошибка базы данных add_message: {e}")
             raise
         finally:
             connection.close()
@@ -104,7 +104,7 @@ class DbManager:
                 query += ' AND agent_id = ?'
                 params.append(agent_id)
 
-            query += ' ORDER BY created_at DESC'
+            query += ' ORDER BY created_at ASC'
 
             if limit:
                 query += ' LIMIT ?'

@@ -35,13 +35,13 @@ async def message(
     try:
         format_type: FormatType = FormatType(format_type_text)
     except ValueError:
-        logger.error("Неверное значение FormatType")
+        logger.error(f"Неверное значение FormatType {format_type_text}")
         format_type: FormatType = FormatType.DEFAULT
 
     try:
         agent_system_type: AgentsSystem = AgentsSystem(agent_system_type_text)
     except ValueError:
-        logger.error("Неверное значение AgentsSystem")
+        logger.error(f"Неверное значение AgentsSystem {agent_system_type_text}")
         agent_system_type: AgentsSystem = AgentsSystem.DEFAULT
 
     return await process_message(

@@ -55,3 +55,38 @@ async def login_endpoint(
     )
 
     return StandardResponse(message=salt)
+
+@router.get(
+    path="/v1/check-auth",
+    response_model=StandardResponse,
+    summary="Проверить авторизацию"
+)
+async def check_auth(
+        response: Response,
+        request: Request
+) -> StandardResponse:
+    session_id = request.cookies.get(KEY_SESSION_ID)
+    password_salt = request.cookies.get(KEY_PASSWORD_SALT)
+
+    if not session_id or not password_salt:
+        raise HTTPException(
+            status_code=401,
+            detail="Не авторизован"
+        )
+
+    # Проверяем валидность
+    result = await get_session_manager().verify_session(
+        session_id=session_id,
+        cookie_password_salt=password_salt
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=401,
+            detail="Невалидная сессия"
+        )
+
+    return StandardResponse(
+        message="Авторизован",
+        success=True
+    )

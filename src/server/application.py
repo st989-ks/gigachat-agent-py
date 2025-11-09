@@ -1,4 +1,5 @@
 import logging
+import uuid
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Any
 
@@ -7,9 +8,11 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
 
+from src.core.constants import KEY_SESSION_ID, ONE_DAY_IN_SECONDS
 from src.endpoints.login import router as router_login
 from src.endpoints.root import router as router_root
 from src.endpoints.agents import router as router_agents
@@ -39,7 +42,7 @@ def get_application() -> FastAPI:
         description="Веб-интерфейс для работы с GigaChat API",
         version=settings.version,
     )
-
+    fast_app.add_middleware(SessionInitMiddleware)
     fast_app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -113,7 +116,7 @@ def get_application() -> FastAPI:
     # ===== Подключение статических файлов =====
     path_site: str = str(settings.SITE_DIR)
     logger.info("🚀 Подключение статических файлов")
-    fast_app.mount("/", StaticFiles(directory=path_site, html=True), name="site")
+    fast_app.mount("/", StaticFiles(directory=path_site, html=True, check_dir=False), name="site")
 
     return fast_app
 
@@ -132,5 +135,29 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     yield
     logger.info("🛑 Приложение выключается...")
 
+class SessionInitMiddleware(BaseHTTPMiddleware):
+    """Middleware для инициализации session_id в куки при первом запросе."""
+
+    async def dispatch(self, request: Request, call_next):
+        session_id = request.cookies.get(KEY_SESSION_ID)
+
+        # Если session_id не существует, генерируем новый
+        if not session_id:
+            session_id = str(uuid.uuid4())
+            logger.info(f"🆔 Новый session_id создан: {session_id}")
+
+        response = await call_next(request)
+
+        # Устанавливаем session_id в куки если его нет или если это первый запрос
+        if KEY_SESSION_ID not in request.cookies:
+            response.set_cookie(
+                key=KEY_SESSION_ID,
+                value=session_id,
+                httponly=True,
+                max_age=ONE_DAY_IN_SECONDS,
+            )
+            logger.info(f"✅ session_id установлен в куки: {session_id}")
+
+        return response
 
 server = get_application()
