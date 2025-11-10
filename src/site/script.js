@@ -10,6 +10,7 @@ let agentSystems = [];
 let responseFormats = [];
 
 // DOM элементы
+console.log("DOM элементы");
 const authScreen = document.getElementById('authScreen');
 const chatScreen = document.getElementById('chatScreen');
 const passwordInput = document.getElementById('passwordInput');
@@ -63,9 +64,32 @@ function scrollToBottom() {
 function getCookie(name) {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
+  if (parts.length === 2) {
+      const cookieValue = parts.pop().split(';').shift();
+      console.log(`🍪 Куки ${name}=${cookieValue}`);
+      return cookieValue;
+  }
+  console.log(`❌ Куки ${name} не найдена`);
   return null;
 }
+
+// ✅ Проверка авторизации через backend
+async function checkAuthorization() {
+  console.log("🔐 Проверяем авторизацию через backend...");
+  try {
+    const response = await fetch('/v1/check-auth', {
+      credentials: 'include'
+    });
+
+    const isAuthorized = response.ok;
+    console.log(`📊 Результат: ${isAuthorized ? '✅ Авторизован' : '❌ Нет (HTTP ' + response.status + ')'}`);
+    return isAuthorized;
+  } catch (error) {
+    console.error('❌ Ошибка проверки:', error);
+    return false;
+  }
+}
+
 
 async function login(password) {
   const response = await fetch('/v1/login', {
@@ -179,6 +203,7 @@ async function deleteMessageHistory() {
   return response.json();
 }
 
+
 // Рендеринг сообщений
 function renderMessage(message) {
   const messageEl = document.createElement('div');
@@ -228,10 +253,41 @@ function renderMessages(messages) {
   scrollToBottom();
 }
 
+
+async function isAuthorized() {
+    try {
+        const response = await fetch('/v1/check-auth', {
+            credentials: 'include'
+        });
+        return response.ok;
+    } catch {
+        return false;
+    }
+}
+
 // Инициализация при загрузке страницы
 async function initializeApp() {
   try {
+    const isAuthorized = await checkAuthorization();
+
+    console.log(`🔍 Авторизация: ${isAuthorized ? '✅' : '❌'}`);
+
+    if (!isAuthorized) {
+      console.log("❌ Не авторизован - форма логина");
+      chatScreen.classList.add('hidden');
+      authScreen.classList.remove('hidden');
+      return;
+    }
+
+    console.log("✅ Авторизован - показываем чат");
+
+    chatScreen.classList.remove('hidden');
+    authScreen.classList.add('hidden');
+
+    // ============================================
     // Загрузка систем агентов
+    // ============================================
+    console.log("📦 Загружаем системы агентов...");
     const agentSystemsResponse = await getAgentSystems();
     agentSystems = agentSystemsResponse.systems;
 
@@ -244,7 +300,10 @@ async function initializeApp() {
       agentSystemSelector.appendChild(option);
     });
 
+    // ============================================
     // Загрузка форматов ответов
+    // ============================================
+    console.log("📦 Загружаем форматы ответов...");
     const responseFormatsResponse = await getResponseFormats();
     responseFormats = responseFormatsResponse.formats;
 
@@ -257,68 +316,95 @@ async function initializeApp() {
       formatSelector.appendChild(option);
     });
 
-    // Восстановление состояния из куки
-    const savedAgentSystem = getCookie('KEY_SELECTED_AGENT_SYSTEMS');
+    const savedAgentSystem = localStorage.getItem('selectedAgentSystem');
     if (savedAgentSystem) {
+      console.log(`✅ Восстановлена система агентов: ${savedAgentSystem}`);
       agentSystemSelector.value = savedAgentSystem;
       selectedAgentSystem = savedAgentSystem;
     }
 
-    const savedFormatType = getCookie('KEY_SELECTED_FORMAT_TYPE_REQUEST');
-    const savedFormat = getCookie('KEY_SELECTED_FORMAT_REQUEST');
+    const savedFormatType = localStorage.getItem('formatType');
+    const savedFormat = localStorage.getItem('format');
 
     if (savedFormatType) {
+      console.log(`✅ Восстановлен тип формата: ${savedFormatType}`);
       formatSelector.value = savedFormatType;
       currentResponseFormat.format_type = savedFormatType;
     }
 
     if (savedFormat) {
+      console.log(`✅ Восстановлен формат: ${savedFormat}`);
       formatDescription.value = savedFormat;
       currentResponseFormat.format = savedFormat;
     }
 
+    // ============================================
     // Загрузка истории сообщений
+    // ============================================
+    console.log("📜 Загружаем историю сообщений...");
     const historyResponse = await getMessageHistory();
     if (historyResponse.messages) {
       messageHistory = historyResponse.messages;
+      console.log(`✅ Загружено ${messageHistory.length} сообщений`);
       renderMessages(messageHistory);
+    } else {
+      console.log("ℹ️ История сообщений пуста");
     }
 
+    console.log("✅ Инициализация завершена успешно!");
+
   } catch (error) {
-    console.error('Ошибка инициализации приложения:', error);
+    console.error('❌ Ошибка инициализации приложения:', error);
     showNotification('Ошибка инициализации: ' + error.message, 'error');
   }
 }
 
+
 // Авторизация
 async function handleLogin() {
   const password = passwordInput.value.trim();
-
   if (!password) {
-    showError(authError, 'Пароль не может быть пустым');
+    showError(authError, "Введите пароль");
     return;
   }
 
   hideError(authError);
   loginBtn.disabled = true;
-  loginBtn.textContent = 'Вход...';
+  loginBtn.textContent = "Логирование...";
 
   try {
-    await login(password);
+    console.log("🔐 Отправляем пароль на backend...");
+    const loginResponse = await login(password);
+    console.log("✅ Backend подтвердил логин:", loginResponse);
+
+    console.log("⏳ Ожидаем установки кук...");
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // ✅ ГЛАВНОЕ ИЗМЕНЕНИЕ
+    const isAuthorized = await checkAuthorization();
+
+    if (!isAuthorized) {
+      throw new Error("❌ Авторизация не прошла. Проверьте CORS и samesite флаги.");
+    }
+
+    console.log("✅ Авторизация успешна!");
     currentPassword = password;
 
-    // Переключиться на экран чата
-    authScreen.classList.add('hidden');
-    chatScreen.classList.remove('hidden');
+    authScreen.classList.add("hidden");
+    chatScreen.classList.remove("hidden");
 
-    // Инициализация приложения
+    console.log("📝 Инициализируем приложение...");
     await initializeApp();
 
+    console.log("✅ Логин завершен!");
   } catch (error) {
-    showError(authError, error.message);
+    console.error("❌ Ошибка логина:", error);
+    showError(authError, "Ошибка: " + error.message);
+    authScreen.classList.remove("hidden");
+    chatScreen.classList.add("hidden");
   } finally {
     loginBtn.disabled = false;
-    loginBtn.textContent = 'Авторизоваться';
+    loginBtn.textContent = "Войти";
   }
 }
 
@@ -335,11 +421,13 @@ agentSystemSelector.addEventListener('change', async (e) => {
 
   if (!system) {
     selectedAgentSystem = null;
+    localStorage.removeItem('selectedAgentSystem');  // ← Добавить
     return;
   }
 
   try {
     await setAgentSystem(system);
+    localStorage.setItem('selectedAgentSystem', system);
     selectedAgentSystem = system;
     showNotification(`Система агентов "${system}" выбрана`, 'success');
   } catch (error) {
@@ -386,6 +474,10 @@ applyFormatBtn.addEventListener('click', async () => {
     currentResponseFormat.format_type = formatType;
     currentResponseFormat.format = format;
 
+    // ✅ Сохраняем в localStorage
+    localStorage.setItem('formatType', formatType);
+    localStorage.setItem('format', format);
+
     settingsModal.classList.add('hidden');
     showNotification(`Формат ответа установлен: ${formatType}`, 'success');
   } catch (error) {
@@ -423,7 +515,7 @@ async function handleSendMessage() {
   // Создаём объект сообщения пользователя
   const userMessage = {
     id: null,
-    session_id: getCookie('session_id') || '',
+    session_id: getCookie('KEY_SESSION_ID') || '',
     message_type: 'USER',
     agent_id: null,
     name: 'Вы',
@@ -484,3 +576,9 @@ messageInput.addEventListener('input', () => {
   messageInput.style.height = 'auto';
   messageInput.style.height = Math.min(messageInput.scrollHeight, 200) + 'px';
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  console.log("✅ Start!");
+  initializeApp()
+  console.log("✅ End!");
+})

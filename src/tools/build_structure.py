@@ -1,21 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""
-build_structure.py — создаёт файл structure-for-llm.txt с содержимым проекта.
-"""
-
-import os
-import sys
-
+from src.core.configs import settings
 from src.tools.make_structure import collect_project_text
-
-OUTPUT_FILENAME = "data/structure-for-llm.txt"
 
 
 def main()-> None:
-    root = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else os.getcwd()
-    output_path = os.path.join(root, OUTPUT_FILENAME)
+    root = str(settings.PROJECT_ROOT)
+    output_path=settings.DATA_DIR / "structure-for-llm.txt"
 
     print(f"📁 Сканирование проекта: {root}")
 

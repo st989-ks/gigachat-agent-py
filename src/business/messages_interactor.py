@@ -7,6 +7,8 @@ from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage, AI
 from src.ai.agents import agent_standard
 from src.ai.agents_systems import AgentsSystem
 from src.ai.manager import get_ai_manager
+from src.business.day_4 import ProcessDay4
+from src.business.day_5 import ProcessDay5
 from src.db.db_manager import get_db_manager
 from src.model.messages import Message, MessageRequest, MessageList, MessageType
 from src.model.tape_formats_response import FormatType
@@ -21,6 +23,7 @@ async def process_message(
         agent_system_type: AgentsSystem,
         value: MessageRequest,
 ) -> Message:
+    logger.info(f"Запускаем тип {agent_system_type}")
     if agent_system_type == AgentsSystem.COMPARE_ANSWERS:
         message: Message = await _process_compare_answers(
             session_id=session_id,
@@ -37,6 +40,16 @@ async def process_message(
             session_id=session_id,
             value=value,
         )
+    elif agent_system_type == AgentsSystem.DAY_4:
+        message = await ProcessDay4(
+            session_id=session_id,
+            value=value,
+        ).process()
+    elif agent_system_type == AgentsSystem.DAY_5:
+        message = await ProcessDay5(
+            session_id=session_id,
+            value=value,
+        ).process()
     else:
         logger.warning(f"❌ Не реализован компонент {agent_system_type}")
         raise HTTPException(
@@ -142,7 +155,11 @@ async def _process_default(
     )
 
     try:
-        message = await get_db_manager().add_message(message)
+        db_message = await get_db_manager().add_message(message)
+        if not db_message:
+            raise
+        message = db_message
+
     except Exception as e:
         logger.error(f"Ошибка добавления сообщения: {e}")
         raise HTTPException(

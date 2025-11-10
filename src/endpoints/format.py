@@ -28,8 +28,8 @@ async def get_response_formats(
 ) -> FormatTypeListResponse:
     await verify(request=request)
 
-    formats: List[FormatType] = [s for s in FormatType]
-    logger.info(f"Отправка списка способов ответа: {[s.value for s in formats]}")
+    formats: List[str] = [s.value for s in FormatType]
+    logger.info(f"Отправка списка способов ответа: {[s for s in formats]}")
     return FormatTypeListResponse(formats=formats)
 
 
@@ -47,7 +47,7 @@ async def set_response_format(
     logger.info(f"сохраняем в куки {KEY_SELECTED_FORMAT_TYPE_REQUEST}={value.format}")
     response.set_cookie(
         key=KEY_SELECTED_FORMAT_TYPE_REQUEST,
-        value=value.format_type,
+        value=value.format_type.value,
         httponly=True,
         max_age=ONE_DAY_IN_SECONDS,
     )

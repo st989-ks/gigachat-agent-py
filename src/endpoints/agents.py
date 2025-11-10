@@ -47,7 +47,7 @@ async def set_agent_system(
     logger.info(f"сохраняем в куки {KEY_SELECTED_AGENT_SYSTEMS}={value.system}")
     response.set_cookie(
         key=KEY_SELECTED_AGENT_SYSTEMS,
-        value=value.system,
+        value=value.system.value,
         httponly=True,
         max_age=ONE_DAY_IN_SECONDS,
     )
