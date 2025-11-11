@@ -2,10 +2,10 @@ import logging
 
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage, SystemMessage
 
-from src.ai.manager import get_ai_manager
+from src.ai.managers.giga_chat_manager import get_ai_manager
 from src.db.db_manager import get_db_manager
 from src.model.agent import Agent
-from src.model.giga_chat_models import GigaChatModel
+from src.model.chat_models import GigaChatModel
 from src.model.messages import Message, MessageRequest, MessageType
 from src.tools.time import get_time_now_h_m_s
 

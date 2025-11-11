@@ -1,7 +1,7 @@
 from enum import Enum
 
 from src.model.agent import Agent
-from src.model.giga_chat_models import GigaChatModel
+from src.model.chat_models import GigaChatModel
 
 
 class AgentId(str, Enum):

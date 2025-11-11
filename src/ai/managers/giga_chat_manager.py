@@ -6,7 +6,7 @@ from langchain_core.messages import BaseMessage
 from langchain_core.runnables import RunnableConfig
 
 from src.model.agent import Agent
-from src.model.giga_chat_models import GigaChatModel
+from src.model.chat_models import GigaChatModel
 from langchain_gigachat.chat_models import GigaChat
 
 logger = logging.getLogger(__name__)
