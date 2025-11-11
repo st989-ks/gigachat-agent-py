@@ -6,7 +6,7 @@ from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage, AI
 
 from src.ai.agents import agent_standard
 from src.ai.agents_systems import AgentsSystem
-from src.ai.manager import get_ai_manager
+from src.ai.managers.giga_chat_manager import get_ai_manager
 from src.business.day_4 import ProcessDay4
 from src.business.day_5 import ProcessDay5
 from src.db.db_manager import get_db_manager

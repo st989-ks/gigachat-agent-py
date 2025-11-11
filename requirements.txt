@@ -1,3 +1,7 @@
+tiktoken
+transformers
+huggingface-hub
+langchain-ollama
 gigachat
 starlette
 # GigaChat Agent - Requirements
