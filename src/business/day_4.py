@@ -339,7 +339,7 @@ class ProcessDay4:
                     stop=None,
                 )
 
-                content = prompt.content if isinstance(prompt.content, str) else str(prompt.content)
+                content = prompt.message if isinstance(prompt.message, str) else str(prompt.message)
                 output += f"{'=' * 60}\n🎭 {agent.name}, temperature={agent.temperature}, {agent.model}\n{'=' * 60}\n{content}\n\n"
 
             except Exception as e:
@@ -437,7 +437,7 @@ class ProcessDay4:
             stop=None,
         )
 
-        content = final_response.content if isinstance(final_response.content, str) else str(final_response.content)
+        content = final_response.message if isinstance(final_response.message, str) else str(final_response.message)
 
         return (
             f"{'#' * 60}\n🎭 {agent.name}, temperature={agent.temperature}, {agent.temperature}\n{'#' * 60}\n{content}\n\n"

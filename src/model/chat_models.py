@@ -8,7 +8,6 @@ class GigaChatModel(str, Enum):
 
 
 class OllamaModel(str, Enum):
-
     TINYLLAMA = "tinyllama:latest"
     MISTRAL_7B = "mistral:7b"
     LLAMA2_13B = "llama2:13b"
@@ -18,8 +17,8 @@ class OllamaModel(str, Enum):
     STARLING = "starling-lm:7b"
     OPENCHAT = "openchat:7b"
 
-class OllamaTaskType(str, Enum):
 
+class OllamaTaskType(str, Enum):
     TEXT_GENERATION = "text_generation"
     CHAT = "chat"
     SUMMARIZATION = "summarization"
@@ -32,3 +31,9 @@ class HuggingFaceModel(str, Enum):
     SAO10K_L3_8B_STHENO_V3_2 = "Sao10K/L3-8B-Stheno-v3.2"
     MINI_MAX_M2 = "MiniMaxAI/MiniMax-M2"
     QWEN2_5_VL_7B = "Qwen/Qwen2.5-VL-7B-Instruct"
+
+
+class ModelProvideType(str, Enum):
+    GIGA_CHAT = "GIGA_CHAT"
+    OLLAMA = "OLLAMA"
+    HUGGING_FACE = "HUGGING_FACE"

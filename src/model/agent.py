@@ -1,12 +1,12 @@
-import uuid
 from enum import Enum
 from typing import Optional, List
 
 from pydantic import BaseModel, Field
 
-from src.ai.agents_systems import AgentsSystem
-from src.model.chat_models import GigaChatModel
-
+class AgentsSystem(str, Enum):
+    DEFAULT = "DEFAULT"
+    TECHNICAL_SPECIFICATION = "TECHNICAL_SPECIFICATION"
+    COMPARE_ANSWERS = "COMPARE_ANSWERS"
 
 class Agent(BaseModel):
     agent_id: str = Field(..., description="ID агента")

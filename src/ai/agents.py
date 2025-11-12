@@ -1,7 +1,7 @@
 from enum import Enum
 
 from src.model.agent import Agent
-from src.model.chat_models import GigaChatModel
+from src.model.chat_models import ModelProvideType, GigaChatModel
 
 
 class AgentId(str, Enum):
@@ -16,8 +16,9 @@ class AgentId(str, Enum):
 agent_standard = Agent(
     agent_id=AgentId.STANDARD.name,
     name="Вассерман Анатолий",
+    provider=ModelProvideType.GIGA_CHAT.value,
     temperature=0.89,
-    model=GigaChatModel.STANDARD,
+    model=GigaChatModel.STANDARD.value,
     system_prompt=(
         "Ты Вассерман Анатолий. Роль: "
         "1) Анализировать запросы пользователей. "
@@ -30,8 +31,9 @@ agent_standard = Agent(
 agent_formatter = Agent(
     agent_id=AgentId.FORMATTER.name,
     name="Агент формировщик",
+    provider=ModelProvideType.GIGA_CHAT.value,
     temperature=0.1,
-    model=GigaChatModel.MAX,
+    model=GigaChatModel.MAX.value,
     system_prompt=(
         "Ты — системный агент, отвечающий СТРОГО в заданном формате.\n\n"
         "ПРАВИЛА:\n"
@@ -44,8 +46,9 @@ agent_formatter = Agent(
 agent_questioner = Agent(
     agent_id=AgentId.QUESTIONER.name,
     name="Ира с вопросами",
+    provider=ModelProvideType.GIGA_CHAT.value,
     temperature=0.3,
-    model=GigaChatModel.STANDARD,
+    model=GigaChatModel.STANDARD.value,
     system_prompt=(
         "Ты — агент, который задает пользователю список вопросов для уточнения требований к проекту."
         "Твоя задача:"
@@ -74,8 +77,9 @@ agent_questioner = Agent(
 agent_technical_specification = Agent(
     agent_id=AgentId.TECHNICAL_SPECIFICATION.name,
     name="Игорь ТЗ",
+    provider=ModelProvideType.GIGA_CHAT.value,
     temperature=1,
-    model=GigaChatModel.MAX,
+    model=GigaChatModel.MAX.value,
     system_prompt=(
         "Ты — эксперт по написанию технических заданий. "
         "Используй исходные данные и уточнённые ответы пользователя, "
@@ -88,8 +92,9 @@ agent_technical_specification = Agent(
 agent_nagging_analyst = Agent(
     agent_id=AgentId.NAGGING_ANALYST.name,
     name="Игорь ТЗ",
+    provider=ModelProvideType.GIGA_CHAT.value,
     temperature=0.5,
-    model=GigaChatModel.MAX,
+    model=GigaChatModel.MAX.value,
     system_prompt=(
         "Ты — аналитик по сбору требований под любую задачу. "
         "На основе вводных данных пользователя создай необходимое количество уточняющих вопросов, "
@@ -112,8 +117,9 @@ agent_nagging_analyst = Agent(
 agent_face_terms_of_reference = Agent(
     agent_id=AgentId.FACE_TERMS_OF_REFERENCE.name,
     name="Игорь ТЗ",
+    provider=ModelProvideType.GIGA_CHAT.value,
     temperature=0.8,
-    model=GigaChatModel.MAX,
+    model=GigaChatModel.MAX.value,
     system_prompt=(
         "Ты — принимаешь данные для технического задания абсолютно любой жизненной ситуации."
         "Твоя задача — получить первичную вводную информацию от пользователя, в каком направлении задача."
