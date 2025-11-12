@@ -76,7 +76,7 @@ class TokenCounter:
         total = 0
         for msg in messages:
             if hasattr(msg, 'content'):
-                total += self.count_tokens(msg.content, model_name)
+                total += self.count_tokens(msg.message, model_name)
             else:
                 total += self.count_tokens(str(msg), model_name)
         return total

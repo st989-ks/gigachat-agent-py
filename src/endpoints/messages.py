@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from starlette.requests import Request
 from starlette.responses import Response
 
-from src.ai.agents_systems import AgentsSystem
+from src.model.agent import AgentsSystem
 from src.business.messages_interactor import process_message, delete_all_messages, get_all_messages
 from src.business.verify import verify
 from src.core.constants import KEY_SELECTED_FORMAT_TYPE_REQUEST, KEY_SELECTED_AGENT_SYSTEMS, KEY_SESSION_ID

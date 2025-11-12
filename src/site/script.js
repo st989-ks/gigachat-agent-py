@@ -31,6 +31,8 @@ const messageInput = document.getElementById('messageInput');
 const loadingIndicator = document.getElementById('loadingIndicator');
 const notification = document.getElementById('notification');
 
+document.documentElement.setAttribute('data-color-scheme', 'dark');
+
 // Утилиты
 function showError(element, message) {
   element.textContent = message;
@@ -231,6 +233,29 @@ function renderMessage(message) {
 
   header.appendChild(name);
   header.appendChild(time);
+  content.appendChild(header)
+  // --- Метаданные агента ---
+  if (!isUser) {
+      const metadata = document.createElement('div');
+      metadata.className = 'message__metadata'
+      // Форматирование данных
+      const promptTokens = typeof message.prompt_tokens === 'number' ? message.prompt_tokens : '-';
+      const completionTokens = typeof message.completion_tokens === 'number' ? message.completion_tokens : '-';
+      const requestTime = typeof message.request_time === 'number'
+          ? (message.request_time / 1000).toFixed(3)
+          : '-';
+      const price = typeof message.price === 'number'
+          ? message.price.toFixed(7)
+          : '-';
+      let metaBlock = '';
+      if (message.meta && String(message.meta).trim() !== '') {
+          metaBlock = `\n${message.meta}`;
+      }
+      metadata.textContent =
+          `📊 prompt: ${promptTokens} | completion: ${completionTokens} | time: ${requestTime}s | price: ${price}${metaBlock}`;
+      content.appendChild(metadata);
+  }
+  // --- Конец блока метаданных агента ---
 
   const text = document.createElement('div');
   text.className = 'message__text';
@@ -244,6 +269,7 @@ function renderMessage(message) {
 
   return messageEl;
 }
+
 
 function renderMessages(messages) {
   messageArea.innerHTML = '';
