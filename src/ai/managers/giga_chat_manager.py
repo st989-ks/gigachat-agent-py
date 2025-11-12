@@ -1,13 +1,18 @@
 import logging
-from typing import Dict, Optional, Tuple, Final, Any
+import time
+from typing import Dict, Optional, Tuple, Final, Any, List, Sequence
 
+from gigachat.models import TokensCount
 from langchain_core.language_models import LanguageModelInput
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage, AIMessage
+from langchain_core.prompt_values import PromptValue
 from langchain_core.runnables import RunnableConfig
 
 from src.model.agent import Agent
 from src.model.chat_models import GigaChatModel
 from langchain_gigachat.chat_models import GigaChat
+
+from src.model.messages import MessageOutput
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +22,9 @@ class GigaChatModelManager:
     DEFAULT_STREAMING: Final[bool] = False
     DEFAULT_MAX_TOKENS: Final[int] = 8000
     DEFAULT_TIMEOUT: Final[float] = 300
+    COST_TOKEN: Final[float] = 1000 / 5000000
+    COST_TOKEN_PRO: Final[float] = 1500 / 1000000
+    COST_TOKEN_MAX: Final[float] = 1950 / 1000000
 
     def __init__(
             self,
@@ -92,51 +100,6 @@ class GigaChatModelManager:
         self._last_params[model_type] = (temperature, streaming, max_tokens, timeout)
         return self._models[cache_key]
 
-    def standard(
-            self,
-            temperature: Optional[float] = None,
-            streaming: Optional[bool] = None,
-            max_tokens: Optional[int] = None,
-            timeout: Optional[float] = None,
-    ) -> GigaChat:
-        return self.get_model(
-            model_type=GigaChatModel.STANDARD,
-            temperature=temperature,
-            streaming=streaming,
-            max_tokens=max_tokens,
-            timeout=timeout
-        )
-
-    def pro(
-            self,
-            temperature: Optional[float] = None,
-            streaming: Optional[bool] = None,
-            max_tokens: Optional[int] = None,
-            timeout: Optional[float] = None,
-    ) -> GigaChat:
-        return self.get_model(
-            model_type=GigaChatModel.PRO,
-            temperature=temperature,
-            streaming=streaming,
-            max_tokens=max_tokens,
-            timeout=timeout
-        )
-
-    def max(
-            self,
-            temperature: Optional[float] = None,
-            streaming: Optional[bool] = None,
-            max_tokens: Optional[int] = None,
-            timeout: Optional[float] = None,
-    ) -> GigaChat:
-        return self.get_model(
-            model_type=GigaChatModel.MAX,
-            temperature=temperature,
-            streaming=streaming,
-            max_tokens=max_tokens,
-            timeout=timeout
-        )
-
     def invoke(
             self,
             agent: Agent,
@@ -145,26 +108,84 @@ class GigaChatModelManager:
             *,
             stop: Optional[list[str]] = None,
             **kwargs: Any,
-    ) -> BaseMessage:
+    ) -> MessageOutput:
         logger.info(f"GigaChatModelManager invoke [{agent.name}]")
-        return self.get_model(
-            model_type=agent.model,
+        model = self.get_model(
+            model_type=GigaChatModel(agent.model),
             temperature=agent.temperature,
             max_tokens=agent.max_tokens,
-        ).invoke(
+        )
+        token_counts_send: list[TokensCount] = model.tokens_count(
+            input_=self.extract_text_list(input_messages),
+            model=agent.model
+        )
+        total_token_counts_send: int = sum(tc.tokens for tc in token_counts_send)
+
+        start_time: float = time.time()
+        response: AIMessage = model.invoke(
             input=input_messages,
             config=config,
             stop=stop,
             **kwargs
         )
+        response_time: float = time.time() - start_time
+
+        token_count_accepted: list[TokensCount] = model.tokens_count(
+            input_=self.extract_text_list([response]),
+            model=agent.model
+        )
+        total_token_counts_accepted: int = sum(tc.tokens for tc in token_count_accepted)
+        response_metadata = response.response_metadata.get('token_usage', {})
+        prompt_tokens = response_metadata.get('prompt_tokens', 0)
+        completion_tokens = response_metadata.get('completion_tokens', 0)
+
+        if agent.model == GigaChatModel.MAX.value:
+            price = self.COST_TOKEN_MAX * (prompt_tokens + completion_tokens)
+        elif agent.model == GigaChatModel.PRO.value:
+            price = self.COST_TOKEN_PRO * (prompt_tokens + completion_tokens)
+        else:
+            price = self.COST_TOKEN * (prompt_tokens + completion_tokens)
+
+        return MessageOutput(
+            message=response,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            request_time=response_time,
+            price=price,
+            meta=(
+                f"Локальный расчет токенов (send) {str(total_token_counts_send)}\n"
+                f"Локальный расчет токенов (accepted) {str(total_token_counts_accepted)}\n"
+            )
+        )
+
+    @staticmethod
+    def extract_text_list(input_data: LanguageModelInput) -> List[str]:
+        if isinstance(input_data, str):
+            return [input_data]
+
+        if isinstance(input_data, PromptValue):
+            return [input_data.to_string()]
+
+        if isinstance(input_data, Sequence):
+            return [
+                msg.content if hasattr(msg, "content")
+                else msg.get("content", str(msg)) if isinstance(msg, dict)
+                else str(msg)
+                for msg in input_data
+            ]
+
+        return [str(input_data)]
+
 
 _ai_model_manager: Optional[GigaChatModelManager] = None
+
 
 def get_ai_manager() -> GigaChatModelManager:
     global _ai_model_manager
     if _ai_model_manager is None:
         _ai_model_manager = GigaChatModelManager("")
     return _ai_model_manager
+
 
 def setup_ai_manager(
         credentials: str,
@@ -174,5 +195,3 @@ def setup_ai_manager(
     manager.credentials = credentials
     manager.verify_ssl_certs = verify_ssl_certs
     return manager
-
-

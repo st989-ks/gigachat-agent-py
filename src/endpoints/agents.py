@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from starlette.responses import Response
 from starlette.requests import Request
 
-from src.ai.agents_systems import AgentsSystem
+from src.model.agent import AgentsSystem
 from src.business.verify import verify
 from src.core.constants import KEY_SELECTED_AGENT_SYSTEMS, KEY_SESSION_ID, KEY_PASSWORD_SALT, ONE_DAY_IN_SECONDS
 from src.model.agent import AgentsSystemListResponse, AgentsSystemRequest

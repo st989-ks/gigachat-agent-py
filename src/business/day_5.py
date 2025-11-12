@@ -68,8 +68,9 @@ class ProcessDay5:
         agent_1 = Agent(
             agent_id="Custom",
             name=f"{model.name} 0",
+            provider="gigachat",
             temperature=0,
-            model=model,
+            model=model.value,
             system_prompt=self.system_prompt,
             max_tokens=None,
         )
@@ -77,8 +78,9 @@ class ProcessDay5:
         agent_2 = Agent(
             agent_id="Custom",
             name=f"{model.name} 0.33",
+            provider="gigachat",
             temperature=0.33,
-            model=model,
+            model=model.value,
             system_prompt=self.system_prompt,
             max_tokens=None,
         )
@@ -86,8 +88,9 @@ class ProcessDay5:
         agent_3 = Agent(
             agent_id="Custom",
             name=f"{model.name} 0",
+            provider="gigachat",
             temperature=0.97,
-            model=model,
+            model=model.value,
             system_prompt=self.system_prompt,
             max_tokens=None,
         )
@@ -111,7 +114,7 @@ class ProcessDay5:
                     stop=None,
                 )
 
-                content = prompt.content if isinstance(prompt.content, str) else str(prompt.content)
+                content = prompt.message if isinstance(prompt.message, str) else str(prompt.message)
                 output += (f"{'=' * 60}\n🎭 temperature={agent.temperature}, "
                            f"model={agent.model}\n{'-' * 10}\n{content}\n\n\n\n")
 
@@ -130,8 +133,9 @@ class ProcessDay5:
         agent = Agent(
             agent_id="Custom",
             name="Верховный судья",
+            provider="gigachat",
             temperature=0.2,
-            model=GigaChatModel.MAX,
+            model=GigaChatModel.MAX.value,
             system_prompt=(
                 """
                 Ты — Верховный Судья (Grand Master Oracle), мудрый координатор совета искусственных интеллектов. 
@@ -202,7 +206,7 @@ class ProcessDay5:
             stop=None,
         )
 
-        content = final_response.content if isinstance(final_response.content, str) else str(final_response.content)
+        content = final_response.message if isinstance(final_response.message, str) else str(final_response.message)
 
         return (
             f"{'#' * 60}\n🎭 {agent.name}, temperature={agent.temperature}, model={agent.model}\n{'#' * 60}\n{content}\n\n"

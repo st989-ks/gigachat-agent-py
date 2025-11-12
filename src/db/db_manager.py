@@ -42,6 +42,11 @@ class DbManager:
                     name TEXT NOT NULL,
                     timestamp TEXT NOT NULL,
                     message TEXT NOT NULL,
+                    prompt_tokens INTEGER NOT NULL,
+                    completion_tokens INTEGER NOT NULL,
+                    request_time INTEGER NOT NULL,
+                    price INTEGER NOT NULL,
+                    meta TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
@@ -60,15 +65,20 @@ class DbManager:
             cursor.execute(
                 f'''
                 INSERT INTO {self.TABLE_MESSAGES} 
-                (session_id, message_type, agent_id, name, timestamp, message)
-                VALUES (?, ?, ?, ?, ?, ?)
+                (session_id, message_type, agent_id, name, timestamp, message, prompt_tokens,completion_tokens,request_time,price,meta)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                     message.session_id,
                     message.message_type.value,
                     message.agent_id,
                     message.name,
                     message.timestamp,
-                    message.message
+                    message.message,
+                    message.prompt_tokens,
+                    message.completion_tokens,
+                    message.request_time,
+                    message.price,
+                    message.meta,
                 ))
             connection.commit()
             message_id = cursor.lastrowid
@@ -121,7 +131,12 @@ class DbManager:
                     agent_id=row['agent_id'],
                     name=row['name'],
                     timestamp=row['timestamp'],
-                    message=row['message']
+                    message=row['message'],
+                    prompt_tokens=row['prompt_tokens'],
+                    completion_tokens=row['completion_tokens'],
+                    request_time=row['request_time'],
+                    price=row['price'],
+                    meta=row['meta'],
                 )
                 for row in rows
             ]

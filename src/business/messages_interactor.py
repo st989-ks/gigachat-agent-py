@@ -5,12 +5,10 @@ from fastapi import HTTPException
 from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage, AIMessage
 
 from src.ai.agents import agent_standard
-from src.ai.agents_systems import AgentsSystem
 from src.ai.managers.giga_chat_manager import get_ai_manager
-from src.business.day_4 import ProcessDay4
-from src.business.day_5 import ProcessDay5
 from src.db.db_manager import get_db_manager
-from src.model.messages import Message, MessageRequest, MessageList, MessageType
+from src.model.agent import AgentsSystem
+from src.model.messages import Message, MessageRequest, MessageList, MessageType, MessageOutput
 from src.model.tape_formats_response import FormatType
 from src.tools.time import get_time_now_h_m_s
 
@@ -40,16 +38,6 @@ async def process_message(
             session_id=session_id,
             value=value,
         )
-    elif agent_system_type == AgentsSystem.DAY_4:
-        message = await ProcessDay4(
-            session_id=session_id,
-            value=value,
-        ).process()
-    elif agent_system_type == AgentsSystem.DAY_5:
-        message = await ProcessDay5(
-            session_id=session_id,
-            value=value,
-        ).process()
     else:
         logger.warning(f"❌ Не реализован компонент {agent_system_type}")
         raise HTTPException(
@@ -102,6 +90,11 @@ async def _process_default(
             name="User",
             timestamp=get_time_now_h_m_s(),
             message=value.message,
+            prompt_tokens=0,
+            completion_tokens=0,
+            request_time=0,
+            price=0,
+            meta="",
         )
         await get_db_manager().add_message(message)
     except Exception as e:
@@ -132,17 +125,17 @@ async def _process_default(
         elif message_type == MessageType.SYSTEM:
             logger.info(f"MessageType.SYSTEM content='''{content}'''")
 
-    message_from_model: BaseMessage = get_ai_manager().invoke(
+    message_from_model: MessageOutput = get_ai_manager().invoke(
         agent=agent_standard,
         input_messages=messages,
         config=None,
         stop=None,
     )
 
-    if isinstance(message_from_model.content, str):
-        content = message_from_model.content
+    if isinstance(message_from_model.message.content, str):
+        content = message_from_model.message.content
     else:
-        content = str(message_from_model.content)
+        content = str(message_from_model.message.content)
 
     message = Message(
         id=None,
@@ -151,7 +144,12 @@ async def _process_default(
         message_type=MessageType.AI,
         name=name,
         timestamp=get_time_now_h_m_s(),
-        message=content
+        message=content,
+        prompt_tokens=message_from_model.prompt_tokens,
+        completion_tokens=message_from_model.completion_tokens,
+        request_time=message_from_model.request_time,
+        price=message_from_model.price,
+        meta=message_from_model.meta,
     )
 
     try:
