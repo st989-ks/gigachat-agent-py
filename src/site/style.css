@@ -824,3 +824,29 @@ select.form-control {
     padding: var(--space-20);
   }
 }
+
+.message__metadata {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    margin-top: var(--space-4);
+    margin-bottom: var(--space-6);
+    padding: var(--space-6) var(--space-8);
+    background: rgba(var(--color-surface), 1);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-family-mono);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    border-left: 1px solid rgba(var(--color-teal-500-rgb), 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+    .message__metadata {
+        background: rgba(var(--color-gray-400-rgb), 0.1);
+        color: rgba(var(--color-gray-300-rgb), 0.8);
+        border-left-color: rgba(var(--color-teal-300-rgb), 0.4);
+    }
+}
+
+.message--user .message__metadata {
+    display: none;
+}

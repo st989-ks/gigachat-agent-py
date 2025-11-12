@@ -115,10 +115,15 @@ class GigaChatModelManager:
             temperature=agent.temperature,
             max_tokens=agent.max_tokens,
         )
-        token_counts_send: list[TokensCount] = model.tokens_count(
-            input_=self.extract_text_list(input_messages),
-            model=agent.model
-        )
+
+        try:
+            token_counts_send: list[TokensCount] = model.tokens_count(
+                input_=self.extract_text_list(input_messages),
+                model=agent.model
+            )
+        except Exception as e:
+            logger.error(e)
+            token_counts_send = []
         total_token_counts_send: int = sum(tc.tokens for tc in token_counts_send)
 
         start_time: float = time.time()
@@ -130,10 +135,15 @@ class GigaChatModelManager:
         )
         response_time: float = time.time() - start_time
 
-        token_count_accepted: list[TokensCount] = model.tokens_count(
-            input_=self.extract_text_list([response]),
-            model=agent.model
-        )
+        try:
+            token_count_accepted: list[TokensCount] = model.tokens_count(
+                input_=self.extract_text_list([response]),
+                model=agent.model
+            )
+        except Exception as e:
+            logger.error(e)
+            token_count_accepted = []
+
         total_token_counts_accepted: int = sum(tc.tokens for tc in token_count_accepted)
         response_metadata = response.response_metadata.get('token_usage', {})
         prompt_tokens = response_metadata.get('prompt_tokens', 0)
