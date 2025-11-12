@@ -4,10 +4,10 @@ from typing import List
 from fastapi import HTTPException
 from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage, AIMessage
 
-from src.ai.agents import agent_standard
 from src.ai.managers.giga_chat_manager import get_ai_manager
 from src.db.db_manager import get_db_manager
-from src.model.agent import AgentsSystem
+from src.model.agent import AgentsSystem, Agent
+from src.model.chat_models import GigaChatModel, ModelProvideType
 from src.model.messages import Message, MessageRequest, MessageList, MessageType, MessageOutput
 from src.model.tape_formats_response import FormatType
 from src.tools.time import get_time_now_h_m_s
@@ -106,13 +106,20 @@ async def _process_default(
 
     list_message: List[Message] = await get_db_manager().get_messages()
 
-    system_prompt = agent_standard.system_prompt
-    agent_id = agent_standard.agent_id
-    name = agent_standard.name
+    agent: Agent = Agent(
+        agent_id="Agent",
+        name="Вассерман Анатолий",
+        provider=ModelProvideType.GIGA_CHAT.value,
+        temperature=0,
+        model="GigaChat-2",
+        system_prompt="",
+        max_tokens=999999999,
+    )
 
-    messages: List[BaseMessage] = [
-        SystemMessage(content=system_prompt)
-    ]
+    agent_id = agent.agent_id
+    name = agent.name
+
+    messages: List[BaseMessage] = []
 
     for msg in list_message:
         message_type = msg.message_type
@@ -126,7 +133,7 @@ async def _process_default(
             logger.info(f"MessageType.SYSTEM content='''{content}'''")
 
     message_from_model: MessageOutput = get_ai_manager().invoke(
-        agent=agent_standard,
+        agent=agent,
         input_messages=messages,
         config=None,
         stop=None,
