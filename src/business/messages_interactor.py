@@ -113,7 +113,7 @@ async def _process_default(
         temperature=0,
         model="GigaChat-2",
         system_prompt="",
-        max_tokens=999999999,
+        max_tokens=None,
     )
 
     agent_id = agent.agent_id
