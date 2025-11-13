@@ -19,7 +19,7 @@ from src.endpoints.agents import router as router_agents
 from src.endpoints.format import router as router_format
 from src.endpoints.messages import router as router_messages
 from src.model.error import ErrorDetail, ErrorResponse
-from src.ai.managers.giga_chat_manager import setup_ai_manager
+from src.ai.managers.giga_chat_manager import setup_giga_chat_manager
 from src.core.configs import settings
 from src.core.logging_config import setup_logging
 from src.db.db_manager import get_db_manager
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 def get_application() -> FastAPI:
     setup_logging()
-    setup_ai_manager(
+    setup_giga_chat_manager(
         credentials=settings.AUTH_KEY,
         verify_ssl_certs=False
     )

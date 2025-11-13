@@ -23,7 +23,7 @@ async def message(
         value: MessageRequest,
         response: Response,
         request: Request
-) -> Message:
+) -> MessageList:
     await verify(request=request)
     agent_system_type_text: Optional[str] = request.cookies.get(KEY_SELECTED_AGENT_SYSTEMS)
     format_type_text: Optional[str] = request.cookies.get(KEY_SELECTED_FORMAT_TYPE_REQUEST)

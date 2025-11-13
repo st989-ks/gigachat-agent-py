@@ -190,18 +190,18 @@ class GigaChatModelManager:
 _ai_model_manager: Optional[GigaChatModelManager] = None
 
 
-def get_ai_manager() -> GigaChatModelManager:
+def get_giga_chat_manager() -> GigaChatModelManager:
     global _ai_model_manager
     if _ai_model_manager is None:
         _ai_model_manager = GigaChatModelManager("")
     return _ai_model_manager
 
 
-def setup_ai_manager(
+def setup_giga_chat_manager(
         credentials: str,
         verify_ssl_certs: bool
 ) -> GigaChatModelManager:
-    manager = get_ai_manager()
+    manager = get_giga_chat_manager()
     manager.credentials = credentials
     manager.verify_ssl_certs = verify_ssl_certs
     return manager
