@@ -4,7 +4,8 @@ from typing import List
 from fastapi import HTTPException
 from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage, AIMessage
 
-from src.ai.managers.giga_chat_manager import get_ai_manager
+from src.ai.managers.giga_chat_manager import get_giga_chat_manager
+from src.business.day_8 import ProcessDay6
 from src.db.db_manager import get_db_manager
 from src.model.agent import AgentsSystem, Agent
 from src.model.chat_models import GigaChatModel, ModelProvideType
@@ -20,31 +21,36 @@ async def process_message(
         format_type: FormatType,
         agent_system_type: AgentsSystem,
         value: MessageRequest,
-) -> Message:
+) -> MessageList:
     logger.info(f"Запускаем тип {agent_system_type}")
     if agent_system_type == AgentsSystem.COMPARE_ANSWERS:
-        message: Message = await _process_compare_answers(
+        messages: MessageList = await _process_compare_answers(
             session_id=session_id,
             value=value,
         )
     elif agent_system_type == AgentsSystem.TECHNICAL_SPECIFICATION:
-        message = await _process_technical_specification(
+        messages = await _process_technical_specification(
             session_id=session_id,
             format_type=format_type,
             value=value,
         )
     elif agent_system_type == AgentsSystem.DEFAULT:
-        message = await _process_default(
+        messages = await _process_default(
             session_id=session_id,
             value=value,
         )
+    elif agent_system_type == AgentsSystem.SUMMARY_DIALOG:
+        messages = await ProcessDay6(
+            session_id=session_id,
+            value=value,
+        ).process()
     else:
         logger.warning(f"❌ Не реализован компонент {agent_system_type}")
         raise HTTPException(
             status_code=503,
             detail="Не реализован компонент {agent_system_type}"
         )
-    return message
+    return messages
 
 
 async def delete_all_messages() -> None:
@@ -59,7 +65,7 @@ async def get_all_messages() -> MessageList:
 async def _process_compare_answers(
         session_id: str,
         value: MessageRequest,
-) -> Message:
+) -> MessageList:
     return await _process_default(
         session_id=session_id,
         value=value,
@@ -70,7 +76,7 @@ async def _process_technical_specification(
         session_id: str,
         format_type: FormatType,
         value: MessageRequest,
-) -> Message:
+) -> MessageList:
     return await _process_default(
         session_id=session_id,
         value=value,
@@ -80,7 +86,7 @@ async def _process_technical_specification(
 async def _process_default(
         session_id: str,
         value: MessageRequest,
-) -> Message:
+) -> MessageList:
     try:
         message: Message = Message(
             id=None,
@@ -132,7 +138,7 @@ async def _process_default(
         elif message_type == MessageType.SYSTEM:
             logger.info(f"MessageType.SYSTEM content='''{content}'''")
 
-    message_from_model: MessageOutput = get_ai_manager().invoke(
+    message_from_model: MessageOutput = get_giga_chat_manager().invoke(
         agent=agent,
         input_messages=messages,
         config=None,
@@ -172,4 +178,4 @@ async def _process_default(
             detail="Ошибка сохранения сообщения в чате"
         )
 
-    return message
+    return MessageList(messages=[message])

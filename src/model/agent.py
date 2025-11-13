@@ -7,6 +7,7 @@ class AgentsSystem(str, Enum):
     DEFAULT = "DEFAULT"
     TECHNICAL_SPECIFICATION = "TECHNICAL_SPECIFICATION"
     COMPARE_ANSWERS = "COMPARE_ANSWERS"
+    SUMMARY_DIALOG = "SUMMARY_DIALOG"
 
 class Agent(BaseModel):
     agent_id: str = Field(..., description="ID агента")

@@ -569,7 +569,14 @@ async function handleSendMessage() {
 
     // Добавляем ответ AI в ДОМ
     if (response) {
-      messageArea.appendChild(renderMessage(response));
+      console.log(`✅ Загружено ${response}`);
+      if (response.messages.length > 1) {
+        messageArea.innerHTML = '';
+        response.messages.forEach(it => messageArea.appendChild(renderMessage(it)));
+        showNotification('Обновление всего списка');
+      } else {
+        messageArea.appendChild(renderMessage(response.messages[0]));
+      }
       scrollToBottom();
     }
   } catch (error) {

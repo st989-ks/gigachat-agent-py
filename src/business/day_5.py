@@ -2,11 +2,11 @@ import logging
 
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage, SystemMessage
 
-from src.ai.managers.giga_chat_manager import get_ai_manager
+from src.ai.managers.giga_chat_manager import get_giga_chat_manager
 from src.db.db_manager import get_db_manager
 from src.model.agent import Agent
 from src.model.chat_models import GigaChatModel
-from src.model.messages import Message, MessageRequest, MessageType
+from src.model.messages import Message, MessageRequest, MessageType, MessageList
 from src.tools.time import get_time_now_h_m_s
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class ProcessDay5:
         self.session_id: str = session_id
         self.message_user: str = value.message
 
-    async def process(self) -> Message:
+    async def process(self) -> MessageList:
         await self.add_message_in_db()
         first_response = await self._process_response(GigaChatModel.STANDARD)
         second_response = await self._process_response(GigaChatModel.PRO)
@@ -104,7 +104,7 @@ class ProcessDay5:
 
         for agent in agents:
             try:
-                prompt = get_ai_manager().invoke(
+                prompt = get_giga_chat_manager().invoke(
                     agent=agent,
                     input_messages=[
                         SystemMessage(agent.system_prompt),
@@ -199,7 +199,7 @@ class ProcessDay5:
         for response_agents in list_response:
             messages.append(AIMessage(response_agents))
 
-        final_response = get_ai_manager().invoke(
+        final_response = get_giga_chat_manager().invoke(
             agent=agent,
             input_messages=messages,
             config=None,
