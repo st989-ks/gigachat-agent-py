@@ -17,6 +17,7 @@ class MessageRequest(BaseModel):
 
 class Message(BaseModel):
     id: Optional[int] = Field(None, description="ID сообщения")
+    id_chat: Optional[str] = Field(None, description="ID of the chat associated with the message")
     session_id: str = Field(..., description="Id сессии")
     message_type: MessageType = Field(..., description="Типы сообщений")
     agent_id: Optional[str] = Field(..., description="Id агента, если это он")

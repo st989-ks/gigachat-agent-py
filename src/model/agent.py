@@ -15,7 +15,6 @@ class Agent(BaseModel):
     name: str = Field(..., description="Имя агента")
     temperature: float = Field(..., description="Температура агента")
     model: str = Field(..., description="Модель для агента")
-    system_prompt: str = Field(..., description="Системный промпт для агента")
     max_tokens: Optional[int] = Field(..., description="Максимальное колличество токенов с которыми работает агент")
 
 

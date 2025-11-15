@@ -6,7 +6,6 @@ from langchain_core.language_models import LanguageModelInput
 from langchain_core.messages import BaseMessage, AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from src.model.agent import Agent
-from src.model.chat_models import HuggingFaceModel
 
 logger = logging.getLogger(__name__)
 

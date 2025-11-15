@@ -2,7 +2,7 @@ import asyncio
 import logging
 import time
 
-from typing import List, Dict
+from typing import Dict
 
 import pandas
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -29,7 +29,6 @@ MODELS_TO_TEST: list[Agent] = [
         name="tinyllama:latest",
         temperature=TEMPERATURE,
         model=OllamaModel.TINYLLAMA.value,
-        system_prompt=SYSTEM_PROMPT,
         max_tokens=MAX_TOKENS
     ),
     Agent(
@@ -38,7 +37,6 @@ MODELS_TO_TEST: list[Agent] = [
         name="mistral:7b",
         temperature=TEMPERATURE,
         model=OllamaModel.MISTRAL_7B.value,
-        system_prompt=SYSTEM_PROMPT,
         max_tokens=MAX_TOKENS
     ),
     Agent(
@@ -47,7 +45,6 @@ MODELS_TO_TEST: list[Agent] = [
         name="llama2:13b",
         temperature=TEMPERATURE,
         model=OllamaModel.LLAMA2_13B.value,
-        system_prompt=SYSTEM_PROMPT,
         max_tokens=MAX_TOKENS
     ),
 
@@ -58,7 +55,6 @@ MODELS_TO_TEST: list[Agent] = [
         name=HuggingFaceModel.MISTRAL_7B_INSTRUCT.value,
         temperature=TEMPERATURE,
         model=HuggingFaceModel.MISTRAL_7B_INSTRUCT.value,
-        system_prompt=SYSTEM_PROMPT,
         max_tokens=MAX_TOKENS
     ),
 
@@ -68,7 +64,6 @@ MODELS_TO_TEST: list[Agent] = [
         name=HuggingFaceModel.LLAMA_3_1_8B_INSTRUCT.value,
         temperature=TEMPERATURE,
         model=HuggingFaceModel.LLAMA_3_1_8B_INSTRUCT.value,
-        system_prompt=SYSTEM_PROMPT,
         max_tokens=MAX_TOKENS
     ),
 
@@ -78,7 +73,6 @@ MODELS_TO_TEST: list[Agent] = [
         name=HuggingFaceModel.SAO10K_L3_8B_STHENO_V3_2.value,
         temperature=TEMPERATURE,
         model=HuggingFaceModel.SAO10K_L3_8B_STHENO_V3_2.value,
-        system_prompt=SYSTEM_PROMPT,
         max_tokens=MAX_TOKENS
     ),
 ]
@@ -93,7 +87,7 @@ async def run_model(agent: Agent) -> Dict:
 
     # Подготавливаем сообщения
     messages = [
-        SystemMessage(agent.system_prompt),
+        SystemMessage(SYSTEM_PROMPT),
         HumanMessage(TEST_PROMPT)
     ]
 

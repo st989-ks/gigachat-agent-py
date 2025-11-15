@@ -18,7 +18,7 @@ class Settings:
         self.PROJECT_ROOT: Final[Path] = Path(__file__).parent.parent.parent
         self.LOGS_DIR: Path = self.PROJECT_ROOT / "logs"
         self.DATA_DIR: Path = self.PROJECT_ROOT / "data"
-        self.SITE_DIR: Path = self.PROJECT_ROOT / "src" / "site"
+        self.SITE_DIR: Path = self.PROJECT_ROOT / "web"
         self.SESSIONS_DIR: Path = self.DATA_DIR / "sessions"
         self.DB_DIR: Path = self.DATA_DIR / "db"
         self.AGENTS_LOG_FILE: Path = self.LOGS_DIR / "agents.log"

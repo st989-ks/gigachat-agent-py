@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage, AIMessage
 
 from src.ai.managers.giga_chat_manager import get_giga_chat_manager
-from src.business.day_8 import ProcessDay6
+from src.business.day_8 import ProcessDay8
 from src.db.db_manager import get_db_manager
 from src.model.agent import AgentsSystem, Agent
 from src.model.chat_models import GigaChatModel, ModelProvideType
@@ -40,7 +40,7 @@ async def process_message(
             value=value,
         )
     elif agent_system_type == AgentsSystem.SUMMARY_DIALOG:
-        messages = await ProcessDay6(
+        messages = await ProcessDay8(
             session_id=session_id,
             value=value,
         ).process()
@@ -118,7 +118,6 @@ async def _process_default(
         provider=ModelProvideType.GIGA_CHAT.value,
         temperature=0,
         model="GigaChat-2",
-        system_prompt="",
         max_tokens=None,
     )
 
