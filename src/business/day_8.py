@@ -14,7 +14,7 @@ from src.tools.time import get_time_now_h_m_s
 logger = logging.getLogger(__name__)
 
 
-class ProcessDay6:
+class ProcessDay8:
     """
     🔥 День 8. Сжатие диалога
 

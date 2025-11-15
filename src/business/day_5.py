@@ -27,8 +27,24 @@ class ProcessDay5:
         self.session_id: str = session_id
         self.message_user: str = value.message
 
+
     async def process(self) -> MessageList:
-        await self.add_message_in_db()
+        message: Message = Message(
+            id=None,
+            session_id=self.session_id,
+            message_type=MessageType.USER,
+            agent_id=None,
+            name="User",
+            timestamp=get_time_now_h_m_s(),
+            message=self.message_user,
+            prompt_tokens=0,
+            completion_tokens=0,
+            request_time=0,
+            price=0,
+            meta="",
+        )
+        await get_db_manager().add_message(message)
+
         first_response = await self._process_response(GigaChatModel.STANDARD)
         second_response = await self._process_response(GigaChatModel.PRO)
         third_response = await self._process_response(GigaChatModel.MAX)
@@ -39,7 +55,7 @@ class ProcessDay5:
             third_response
         ])
 
-        message: Message = Message(
+        message = Message(
             id=None,
             session_id=self.session_id,
             message_type=MessageType.AI,
@@ -47,22 +63,15 @@ class ProcessDay5:
             name="MULTI AI",
             timestamp=get_time_now_h_m_s(),
             message=first_response + second_response + third_response + forth_response,
+            prompt_tokens=0,
+            completion_tokens=0,
+            request_time=0,
+            price=0,
+            meta="",
         )
         message = await get_db_manager().add_message(message)  # type: ignore
 
-        return message
-
-    async def add_message_in_db(self) -> None:
-        message: Message = Message(
-            id=None,
-            session_id=self.session_id,
-            message_type=MessageType.USER,
-            agent_id=None,
-            name="User",
-            timestamp=get_time_now_h_m_s(),
-            message=self.message_user,
-        )
-        await get_db_manager().add_message(message)
+        return MessageList(messages=[message])
 
     async def _process_response(self, model: GigaChatModel) -> str:
         agent_1 = Agent(

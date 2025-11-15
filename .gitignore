@@ -53,3 +53,4 @@ data
 # Misc
 structure-for-llm.txt
 *.iml
+.aider*
