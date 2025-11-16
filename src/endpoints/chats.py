@@ -26,6 +26,7 @@ async def get_chats(
         request: Request
 ) -> ChatList:
     await verify(request=request)
+    # Ждём выполнение корутины и получаем результат
     list_chats: ChatList = await get_all_chats()
     logger.info(f"Отправка списка чатов: {list_chats}")
     return list_chats
