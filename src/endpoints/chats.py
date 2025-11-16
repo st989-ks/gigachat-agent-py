@@ -5,17 +5,10 @@ from fastapi import APIRouter, HTTPException
 from starlette.responses import Response
 from starlette.requests import Request
 
-<<<<<<< HEAD
-from src.business.verify import verify
-from src.business.messages_interactor import get_all_chats, get_all_messages_chat
-from src.core.constants import KEY_SELECTED_CHAT, KEY_SESSION_ID, KEY_PASSWORD_SALT, ONE_DAY_IN_SECONDS
-from src.model.messages import MessageList
-=======
 from src.model.agent import Agent
 from src.business.verify import verify
 from src.business.messages_interactor import get_all_chats, get_all_messages_chat
 from src.core.constants import KEY_SELECTED_CHAT, KEY_SESSION_ID, KEY_PASSWORD_SALT, ONE_DAY_IN_SECONDS
->>>>>>> 3de0af0 (Разбивает базу на разные чаты)
 from src.model.chat import ChatList, Chat, ChatIdRequest
 from src.model.common import StandardResponse
 
@@ -25,11 +18,7 @@ logger = logging.getLogger(__name__)
 
 @router.get(
     path="/v1/chats",
-<<<<<<< HEAD
     response_model=ChatList,
-=======
-    response_model=AgentsSystemListResponse,
->>>>>>> 3de0af0 (Разбивает базу на разные чаты)
     summary="Получить список всех чатов"
 )
 async def get_chats(
