@@ -246,6 +246,12 @@ class DbManager:
         finally:
             connection.close()
 
+    async def update_chat_system_prompt(chat_id: str, system_prompt:str) -> Chat:
+        return Chat()
+
+    async def get_chat_by_id(chat_id: str) -> Chat:
+        return Chat()
+
     async def get_chats(self) -> List[Chat]:
         connection = self._get_connection()
         cursor = connection.cursor()

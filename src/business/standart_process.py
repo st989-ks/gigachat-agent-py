@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from typing import List, Final
 
 from fastapi import HTTPException
@@ -6,6 +7,7 @@ from langchain_core.messages import HumanMessage, AIMessage, BaseMessage, System
 
 from src.ai.managers.giga_chat_manager import get_giga_chat_manager
 from src.db.db_manager import get_db_manager
+from src.model.chat import Chat
 from src.model.agent import Agent
 from src.model.chat_models import GigaChatModel, ModelProvideType
 from src.model.messages import (
@@ -42,13 +44,13 @@ class StandartProcess:
     def __init__(
         self,
         session_id: str,
-        chat_id: str,
+        chat: Chat,
         value: MessageRequest,
     ):
-        self.chat = asyncio.run(get_db_manager().get_chat_by_id(chat_id))  # Получаем объект чата
+        self.chat: Chat = chat
         self.message_user: Message = Message(
             id=None,
-            chat_id=chat_id,
+            chat_id=chat.id,
             session_id=session_id,
             message_type=MessageType.USER,
             agent_id=None,
@@ -191,6 +193,7 @@ class StandartProcess:
         )
 
         await get_db_manager().remove_all_messages_chat(chat_id=self.message_user.chat_id)
+        self.chat = await get_db_manager().update_chat_system_prompt(system_prompt=self.system_prompt)
 
         try:
             summary_message_db: Message = await get_db_manager().add_message(summary_message)  # type: ignore

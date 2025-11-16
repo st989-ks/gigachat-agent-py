@@ -30,18 +30,19 @@ async def process_message(
     chat_id: str,
     value: MessageRequest,
 ) -> MessageList:
+    chat: Chat = await get_db_manager().get_chat_by_id(chat_id)
     logger.info(f"Работа в чате {chat_id}")
     if chat_id == CHATS_DEFAULT[0].id:
         messages: MessageList = await StandartProcess(
-            session_id=session_id, chat_id=chat_id, value=value
+            session_id=session_id, chat=chat, value=value
         ).process()
     elif chat_id == CHATS_DEFAULT[1].id:
         messages = await StandartProcess(
-            session_id=session_id, chat_id=chat_id, value=value
+            session_id=session_id, chat=chat, value=value
         ).process()
     else:
         messages = await StandartProcess(
-            session_id=session_id, chat_id=chat_id, value=value
+            session_id=session_id, chat=chat, value=value
         ).process()
     return messages
 
