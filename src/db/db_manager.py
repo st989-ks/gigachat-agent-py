@@ -5,6 +5,7 @@ from sqlite3 import Connection, Cursor
 from typing import List, Optional
 
 from src.model.chat import Chat
+from src.core.constants import CHATS_DEFAULT
 from src.model.messages import Message, MessageType
 
 logger = logging.getLogger(__name__)
@@ -60,6 +61,19 @@ class DbManager:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
+
+            cursor.execute(f'''SELECT COUNT(*) FROM {self.TABLE_CHATS}''')
+            existing_count = cursor.fetchone()[0]
+
+            if existing_count == 0:
+                for chat in CHATS_DEFAULT:
+                    cursor.execute(
+                        "INSERT INTO chats (id_chat, name) VALUES (?, ?)",
+                        (chat.id, chat.name)
+                    )
+                connection.commit()
+                logger.info(f"Default chats created: {CHATS_DEFAULT}")
+
             connection.commit()
             logger.info(f"Basis initialized: {self.db_path}")
         except Exception as e:
