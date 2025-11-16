@@ -42,7 +42,7 @@ async def message(
         format_type = FormatType.DEFAULT
 
     return await process_message(
-        session_id=session_id,
+        session_id=id_session,
         format_type=format_type,
         chat_id=chat_id,
         value=value,
@@ -51,6 +51,7 @@ async def message(
 
 @router.get("/v1/history_message")
 async def get_history_message(
+        value: ChatIdRequest,
         response: Response,
         request: Request,
         id: str = Query(..., description="Chat ID")
@@ -61,6 +62,7 @@ async def get_history_message(
 
 @router.delete("/v1/history_message")
 async def delete_history_message(
+        value: ChatIdRequest,
         response: Response,
         request: Request,
         id: str = Query(..., description="Chat ID")
