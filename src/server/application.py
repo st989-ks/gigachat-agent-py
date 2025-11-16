@@ -15,7 +15,7 @@ from starlette.staticfiles import StaticFiles
 from src.core.constants import KEY_SESSION_ID, ONE_DAY_IN_SECONDS
 from src.endpoints.login import router as router_login
 from src.endpoints.root import router as router_root
-from src.endpoints.agents import router as router_agents
+from src.endpoints.chats import router as router_chats
 from src.endpoints.format import router as router_format
 from src.endpoints.messages import router as router_messages
 from src.model.error import ErrorDetail, ErrorResponse
@@ -53,7 +53,7 @@ def get_application() -> FastAPI:
 
     fast_app.include_router(router_login)
     fast_app.include_router(router_root)
-    fast_app.include_router(router_agents)
+    fast_app.include_router(router_chats)
     fast_app.include_router(router_format)
     fast_app.include_router(router_messages)
 
