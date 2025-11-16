@@ -31,15 +31,15 @@
     <!-- Левая панель с кнопками -->
     <div class="left-panel">
         <div class="control-group">
-            <!-- Выбор системы агентов -->
+            <!-- Список чатов -->
             <div class="form-group">
-                <label for="agentSystemSelector" class="form-label">Система агентов</label>
-                <select id="agentSystemSelector" class="form-control agent-selector">
-                    <option value="">Выберите систему агентов</option>
+                <label for="chatSelector" class="form-label">Выбор чата</label>
+                <select id="chatSelector" class="form-control chat-selector">
+                    <option value="">Выберите чат</option>
                 </select>
             </div>
 
-            <!-- Кнопка настроек -->
+            <!-- Кнопка настройки формата ответа -->
             <button id="settingsBtn" class="btn btn--secondary settings-btn" title="Настройки формата ответа">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                      stroke-linecap="round" stroke-linejoin="round">
@@ -50,7 +50,7 @@
             </button>
 
             <!-- Кнопка очистки чата -->
-            <button id="clearChatBtn" class="btn btn--secondary clear-chat-btn" title="Очистить историю чата">
+            <button id="clearChatBtn" class="btn btn--secondary clear-chat-btn" title="Очистить текущий чат">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                      stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -122,6 +122,6 @@
 <!-- Уведомления -->
 <div id="notification" class="notification hidden"></div>
 
-<script src="./script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>

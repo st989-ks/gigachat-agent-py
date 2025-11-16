@@ -4,7 +4,7 @@ from typing import Dict, Optional, Tuple, Final, Any, List, Sequence
 
 from gigachat.models import TokensCount
 from langchain_core.language_models import LanguageModelInput
-from langchain_core.messages import BaseMessage, AIMessage
+from langchain_core.messages import AIMessage
 from langchain_core.prompt_values import PromptValue
 from langchain_core.runnables import RunnableConfig
 

@@ -4,10 +4,9 @@ from fastapi import APIRouter
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, Response
 
-from src.model.agent import AgentsSystem
 from src.core.configs import settings
-from src.core.constants import KEY_SELECTED_FORMAT_TYPE_REQUEST, KEY_SELECTED_AGENT_SYSTEMS, ONE_DAY_IN_SECONDS, \
-    KEY_SESSION_ID, KEY_PASSWORD_SALT
+from src.core.constants import KEY_SELECTED_CHAT, KEY_SELECTED_FORMAT_TYPE_REQUEST, ONE_DAY_IN_SECONDS, \
+    KEY_SESSION_ID, KEY_PASSWORD_SALT, CHATS_DEFAULT
 from src.model.tape_formats_response import FormatType
 
 router = APIRouter()
@@ -39,13 +38,13 @@ async def root() -> HTMLResponse:
 async def chat_page(
         request: Request
 ) -> HTMLResponse:
-    agent = request.cookies.get(KEY_SELECTED_AGENT_SYSTEMS)
+    id_chat = request.cookies.get(KEY_SELECTED_CHAT)
     format_response = request.cookies.get(KEY_SELECTED_FORMAT_TYPE_REQUEST)
     session_id = request.cookies.get(KEY_SESSION_ID)
     password_salt = request.cookies.get(KEY_PASSWORD_SALT)
 
-    if not agent:
-        agent = AgentsSystem.DEFAULT
+    if not id_chat:
+        id_chat = CHATS_DEFAULT[0].id
 
     if not format_response:
         format_response = FormatType.DEFAULT
@@ -74,8 +73,8 @@ async def chat_page(
                 )
 
             response.set_cookie(
-                key=KEY_SELECTED_AGENT_SYSTEMS,
-                value=agent,
+                key=KEY_SELECTED_CHAT,
+                value=id_chat,
                 httponly=True,
                 max_age=ONE_DAY_IN_SECONDS,
             )

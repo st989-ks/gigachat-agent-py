@@ -4,6 +4,8 @@ from pathlib import Path
 from sqlite3 import Connection, Cursor
 from typing import List, Optional
 
+from src.model.chat import Chat
+from src.core.constants import CHATS_DEFAULT
 from src.model.messages import Message, MessageType
 
 logger = logging.getLogger(__name__)
@@ -11,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 class DbManager:
     TABLE_MESSAGES = "messages"
+    TABLE_CHATS = "chats"
 
     def __init__(self, db_dir: Optional[Path] = None) -> None:
         if db_dir is None:
@@ -23,7 +26,7 @@ class DbManager:
 
         self._init_db()
 
-    def _get_connection(self) -> sqlite3.Connection:
+    def _get_connection(self) -> Connection:
         connection = sqlite3.connect(str(self.db_path))
         connection.row_factory = sqlite3.Row
         return connection
@@ -38,6 +41,7 @@ class DbManager:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     session_id TEXT NOT NULL,
                     agent_id TEXT,
+                    chat_id TEXT NOT NULL,
                     message_type TEXT NOT NULL,
                     name TEXT NOT NULL,
                     timestamp TEXT NOT NULL,
@@ -50,10 +54,31 @@ class DbManager:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
+            cursor.execute(f'''
+                CREATE TABLE IF NOT EXISTS {self.TABLE_CHATS} (
+                    chat_id TEXT PRIMARY KEY,
+                    name TEXT NULL,
+                    system_prompt TEXT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+
+            cursor.execute(f'''SELECT COUNT(*) FROM {self.TABLE_CHATS}''')
+            existing_count = cursor.fetchone()[0]
+
+            if existing_count == 0:
+                for chat in CHATS_DEFAULT:
+                    cursor.execute(
+                        "INSERT INTO chats (chat_id, name, system_prompt) VALUES (?, ?, ?)",
+                        (chat.id, chat.name, chat.system_prompt)
+                    )
+                connection.commit()
+                logger.info(f"Default chats created: {CHATS_DEFAULT}")
+
             connection.commit()
-            logger.info(f"База данных инициализирована: {self.db_path}")
+            logger.info(f"Basis initialized: {self.db_path}")
         except Exception as e:
-            logger.error(f"Ошибка инициализации БД: {e}")
+            logger.error(f"DB initialization error: {e}")
         finally:
             connection.close()
 
@@ -62,12 +87,17 @@ class DbManager:
         cursor = connection.cursor()
 
         try:
+            # Проверка наличия обязательных полей
+            if not all([message.chat_id, message.session_id]):
+                raise ValueError("Обязательные поля отсутствуют: chat_id или session_id")
+            
             cursor.execute(
                 f'''
                 INSERT INTO {self.TABLE_MESSAGES} 
-                (session_id, message_type, agent_id, name, timestamp, message, prompt_tokens,completion_tokens,request_time,price,meta)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (chat_id, session_id, message_type, agent_id, name, timestamp, message, prompt_tokens,completion_tokens,request_time,price,meta)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
+                    message.chat_id,
                     message.session_id,
                     message.message_type.value,
                     message.agent_id,
@@ -85,34 +115,38 @@ class DbManager:
 
             message_with_id = message.model_copy(update={"id": message_id})
 
-            logger.info(f"Сообщение добавлено: ID={message_with_id.id}, session={message_with_id.session_id}")
+            logger.info(f"Message added: ID={message_with_id.id}, chat={message_with_id.chat_id}")
             return message_with_id
         except Exception as e:
-            logger.error(f"Ошибка базы данных add_message: {e}")
+            logger.error(f"DB insert error: {e}")
             raise
         finally:
             connection.close()
 
     async def get_messages(
             self,
+            chat_id: str,
             session_id: Optional[str] = None,
-            agent_id: Optional[str] = None,
             limit: Optional[int] = None
     ) -> List[Message]:
         connection: Connection = self._get_connection()
         cursor: Cursor = connection.cursor()
 
         try:
-            query: str = f'SELECT * FROM {self.TABLE_MESSAGES} WHERE 1=1'
+            query: str = f'SELECT * FROM {self.TABLE_MESSAGES}'
             params: list = []
 
+            conditions = []
+            if chat_id:
+                conditions.append("chat_id = ?")
+                params.append(chat_id)
+
             if session_id:
-                query += ' AND session_id = ?'
+                conditions.append("session_id = ?")
                 params.append(session_id)
 
-            if agent_id:
-                query += ' AND agent_id = ?'
-                params.append(agent_id)
+            if len(conditions) > 0:
+                query += " WHERE " + " AND ".join(conditions)
 
             query += ' ORDER BY created_at ASC'
 
@@ -126,6 +160,7 @@ class DbManager:
             messages = [
                 Message(
                     id=row['id'],
+                    chat_id=row['chat_id'],
                     session_id=row['session_id'],
                     message_type=MessageType(row['message_type']),
                     agent_id=row['agent_id'],
@@ -141,10 +176,24 @@ class DbManager:
                 for row in rows
             ]
 
-            logger.info(f"Получено сообщений: {len(messages)}")
+            logger.info(f"{len(messages)} messages retrieved.")
             return messages
         except Exception as e:
-            logger.error(f"Ошибка получения сообщений: {e}")
+            logger.error(f"DB retrieval error: {e}")
+            raise
+        finally:
+            connection.close()
+
+    async def clear_messages(self, chat_id: str) -> None:
+        connection = self._get_connection()
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(f"DELETE FROM {self.TABLE_MESSAGES} WHERE chat_id = ?", (chat_id,))
+            connection.commit()
+            logger.info(f"Messaging history cleared for chat: {chat_id}")
+        except Exception as e:
+            logger.error(f"Clear DB error: {e}")
             raise
         finally:
             connection.close()
@@ -159,6 +208,23 @@ class DbManager:
             logger.warning(f"Таблица {self.TABLE_MESSAGES} полностью очищена")
         except Exception as e:
             logger.error(f"Ошибка очистки БД: {e}")
+            raise
+        finally:
+            connection.close()
+
+    async def add_chat(self, chat: Chat) -> Optional[str]:
+        connection = self._get_connection()
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(
+                "INSERT INTO chats (chat_id, name, system_prompt) VALUES (?, ?, ?)",
+                (chat.id, chat.name, chat.system_prompt)
+            )
+            connection.commit()
+            return chat.id
+        except Exception as e:
+            logger.error(f"Error adding chat: {e}")
             raise
         finally:
             connection.close()
@@ -180,9 +246,92 @@ class DbManager:
         finally:
             connection.close()
 
+    async def update_chat_system_prompt(self, chat_id: str, system_prompt: str) -> bool:
+        connection = self._get_connection()
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(
+                f"UPDATE {self.TABLE_CHATS} SET system_prompt = ? WHERE chat_id = ?",
+                (system_prompt, chat_id)
+            )
+            connection.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Error updating chat system prompt: {e}")
+            return False
+        finally:
+            connection.close()
+
+    async def get_chat_by_id(self, chat_id: str) -> Optional[Chat]:
+        connection = self._get_connection()
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(f"SELECT * FROM {self.TABLE_CHATS} WHERE chat_id = ?", (chat_id,))
+            row = cursor.fetchone()
+            if row:
+                return Chat(
+                    id=row["chat_id"],
+                    name=row["name"],
+                    system_prompt=row["system_prompt"],
+                    created_at=row["created_at"]
+                )
+            else:
+                return None
+        except Exception as e:
+            logger.error(f"Error fetching chat by ID: {e}")
+            return None
+        finally:
+            connection.close()
+
+    async def get_chats(self) -> List[Chat]:
+        connection = self._get_connection()
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(f"SELECT chat_id, name, system_prompt, created_at FROM {self.TABLE_CHATS}")
+            rows = cursor.fetchall()
+            return [Chat(id=row["chat_id"], name=row["name"], system_prompt=row["system_prompt"], created_at=row["created_at"]) for row in rows]
+        except Exception as e:
+            logger.error(f"Error getting chats: {e}")
+            raise
+        finally:
+            connection.close()
+
+    async def update_name_chat(self, chat_id: str, chat_name: Optional[str]) -> bool:
+        connection = self._get_connection()
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(
+                f"UPDATE {self.TABLE_CHATS} SET name = ? WHERE chat_id = ?",
+                (chat_name, chat_id)
+            )
+            connection.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Error updating chat: {e}")
+            return False
+        finally:
+            connection.close()
+
+    async def remove_all_messages_chat(self, chat_id: str) -> bool:
+        connection = self._get_connection()
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(f"DELETE FROM {self.TABLE_MESSAGES} WHERE chat_id = ?", (chat_id,))
+            connection.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Error deleting messages chat: {e}")
+            return False
+        finally:
+            connection.close()
+
 
 _db_manager: Optional[DbManager] = None
-
 
 def get_db_manager() -> DbManager:
     global _db_manager

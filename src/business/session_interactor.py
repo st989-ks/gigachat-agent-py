@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 def _blocking_read_json(path: Path) -> Dict[str, Any]:
     try:
         text = path.read_text(encoding="utf-8")
-        return json.loads(text)  # type: Dict[str, Any]
+        return json.loads(text)
     except Exception as e:
         logger.exception("blocking read json error for %s: %s", path, e)
         return {}
@@ -157,7 +157,7 @@ class SessionManager:
             return False
 
     @staticmethod
-    def _hash_password(password: str, salt: str) -> str:
+    def _hash_password(password: str, salt: Optional[str]) -> str:
         return hashlib.sha256(f"{password}{salt}".encode()).hexdigest()
 
 

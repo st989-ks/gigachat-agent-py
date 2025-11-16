@@ -1,12 +1,12 @@
 // Глобальные переменные
 let currentPassword = '';
-let selectedAgentSystem = null;
+let selectedChatId = null;
 let messageHistory = [];
 let currentResponseFormat = {
   format_type: '[DEFAULT]',
   format: ''
 };
-let agentSystems = [];
+let chats = [];
 let responseFormats = [];
 
 // DOM элементы
@@ -16,7 +16,7 @@ const chatScreen = document.getElementById('chatScreen');
 const passwordInput = document.getElementById('passwordInput');
 const loginBtn = document.getElementById('loginBtn');
 const authError = document.getElementById('authError');
-const agentSystemSelector = document.getElementById('agentSystemSelector');
+const chatSelector = document.getElementById('chatSelector');
 const settingsBtn = document.getElementById('settingsBtn');
 const clearChatBtn = document.getElementById('clearChatBtn');
 const settingsModal = document.getElementById('settingsModal');
@@ -67,9 +67,9 @@ function getCookie(name) {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) {
-      const cookieValue = parts.pop().split(';').shift();
-      console.log(`🍪 Куки ${name}=${cookieValue}`);
-      return cookieValue;
+    const cookieValue = parts.pop().split(';').shift();
+    console.log(`🍪 Куки ${name}=${cookieValue}`);
+    return cookieValue;
   }
   console.log(`❌ Куки ${name} не найдена`);
   return null;
@@ -111,28 +111,28 @@ async function login(password) {
   return response.json();
 }
 
-async function getAgentSystems() {
-  const response = await fetch('/v1/agent_systems', {
+async function getChats() {
+  const response = await fetch('/v1/chats', {
     credentials: 'include'
   });
 
   if (!response.ok) {
-    throw new Error('Ошибка загрузки списка систем агентов');
+    throw new Error('Ошибка загрузки списка чатов');
   }
 
   return response.json();
 }
 
-async function setAgentSystem(system) {
-  const response = await fetch('/v1/set_agent_system', {
+async function setSelectedChat(chatId) {
+  const response = await fetch('/v1/set_chat', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ system }),
+    body: JSON.stringify({ id: chatId }),
     credentials: 'include'
   });
 
   if (!response.ok) {
-    throw new Error('Ошибка установки системы агентов');
+    throw new Error('Ошибка выбора чата');
   }
 
   return response.json();
@@ -180,8 +180,8 @@ async function sendMessage(message) {
   return response.json();
 }
 
-async function getMessageHistory() {
-  const response = await fetch('/v1/history_message', {
+async function getMessageHistory(chatId) {
+  const response = await fetch(`/v1/history_message?id=${chatId}`, {
     credentials: 'include'
   });
 
@@ -192,8 +192,8 @@ async function getMessageHistory() {
   return response.json();
 }
 
-async function deleteMessageHistory() {
-  const response = await fetch('/v1/history_message', {
+async function deleteMessageHistory(chatId) {
+  const response = await fetch(`/v1/history_message?id=${chatId}`, {
     method: 'DELETE',
     credentials: 'include'
   });
@@ -236,24 +236,24 @@ function renderMessage(message) {
   content.appendChild(header)
   // --- Метаданные агента ---
   if (!isUser) {
-      const metadata = document.createElement('div');
-      metadata.className = 'message__metadata'
-      // Форматирование данных
-      const promptTokens = typeof message.prompt_tokens === 'number' ? message.prompt_tokens : '-';
-      const completionTokens = typeof message.completion_tokens === 'number' ? message.completion_tokens : '-';
-      const requestTime = typeof message.request_time === 'number'
-          ? (message.request_time / 1000).toFixed(3)
-          : '-';
-      const price = typeof message.price === 'number'
-          ? message.price.toFixed(7)
-          : '-';
-      let metaBlock = '';
-      if (message.meta && String(message.meta).trim() !== '') {
-          metaBlock = `\n${message.meta}`;
-      }
-      metadata.textContent =
-          `📊 prompt: ${promptTokens} | completion: ${completionTokens} | time: ${requestTime}s | price: ${price}${metaBlock}`;
-      content.appendChild(metadata);
+    const metadata = document.createElement('div');
+    metadata.className = 'message__metadata'
+    // Форматирование данных
+    const promptTokens = typeof message.prompt_tokens === 'number' ? message.prompt_tokens : '-';
+    const completionTokens = typeof message.completion_tokens === 'number' ? message.completion_tokens : '-';
+    const requestTime = typeof message.request_time === 'number'
+      ? (message.request_time / 1000).toFixed(3)
+      : '-';
+    const price = typeof message.price === 'number'
+      ? message.price.toFixed(7)
+      : '-';
+    let metaBlock = '';
+    if (message.meta && String(message.meta).trim() !== '') {
+      metaBlock = `\n${message.meta}`;
+    }
+    metadata.textContent =
+      `📊 prompt: ${promptTokens} | completion: ${completionTokens} | time: ${requestTime}s | price: ${price}${metaBlock}`;
+    content.appendChild(metadata);
   }
   // --- Конец блока метаданных агента ---
 
@@ -281,14 +281,14 @@ function renderMessages(messages) {
 
 
 async function isAuthorized() {
-    try {
-        const response = await fetch('/v1/check-auth', {
-            credentials: 'include'
-        });
-        return response.ok;
-    } catch {
-        return false;
-    }
+  try {
+    const response = await fetch('/v1/check-auth', {
+      credentials: 'include'
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 // Инициализация при загрузке страницы
@@ -311,19 +311,19 @@ async function initializeApp() {
     authScreen.classList.add('hidden');
 
     // ============================================
-    // Загрузка систем агентов
+    // Загрузка списка чатов
     // ============================================
-    console.log("📦 Загружаем системы агентов...");
-    const agentSystemsResponse = await getAgentSystems();
-    agentSystems = agentSystemsResponse.systems;
+    console.log("📦 Загружаем список чатов...");
+    const chatsResponse = await getChats();
+    chats = chatsResponse.chats;
 
-    // Заполнение селектора систем агентов
-    agentSystemSelector.innerHTML = '<option value="">Выберите систему агентов</option>';
-    agentSystems.forEach(system => {
+    // Заполнение селектора чатов
+    chatSelector.innerHTML = '<option value="">Выберите чат</option>';
+    chats.forEach(chat => {
       const option = document.createElement('option');
-      option.value = system;
-      option.textContent = system;
-      agentSystemSelector.appendChild(option);
+      option.value = chat.id;
+      option.textContent = chat.name;
+      chatSelector.appendChild(option);
     });
 
     // ============================================
@@ -342,11 +342,11 @@ async function initializeApp() {
       formatSelector.appendChild(option);
     });
 
-    const savedAgentSystem = localStorage.getItem('selectedAgentSystem');
-    if (savedAgentSystem) {
-      console.log(`✅ Восстановлена система агентов: ${savedAgentSystem}`);
-      agentSystemSelector.value = savedAgentSystem;
-      selectedAgentSystem = savedAgentSystem;
+    const savedChatId = localStorage.getItem('selectedChatId');
+    if (savedChatId) {
+      console.log(`✅ Восстановлен выбранный чат: ${savedChatId}`);
+      chatSelector.value = savedChatId;
+      selectedChatId = savedChatId;
     }
 
     const savedFormatType = localStorage.getItem('formatType');
@@ -368,13 +368,15 @@ async function initializeApp() {
     // Загрузка истории сообщений
     // ============================================
     console.log("📜 Загружаем историю сообщений...");
-    const historyResponse = await getMessageHistory();
-    if (historyResponse.messages) {
-      messageHistory = historyResponse.messages;
-      console.log(`✅ Загружено ${messageHistory.length} сообщений`);
-      renderMessages(messageHistory);
-    } else {
-      console.log("ℹ️ История сообщений пуста");
+    if (selectedChatId) {
+      const historyResponse = await getMessageHistory(selectedChatId);
+      if (historyResponse.messages) {
+        messageHistory = historyResponse.messages;
+        console.log(`✅ Загружено ${messageHistory.length} сообщений`);
+        renderMessages(messageHistory);
+      } else {
+        console.log("ℹ️ История сообщений пуста");
+      }
     }
 
     console.log("✅ Инициализация завершена успешно!");
@@ -441,25 +443,32 @@ passwordInput.addEventListener('keypress', (e) => {
   }
 });
 
-// Выбор системы агентов
-agentSystemSelector.addEventListener('change', async (e) => {
-  const system = e.target.value;
+// Выбор чата
+chatSelector.addEventListener('change', async (e) => {
+  const chatId = e.target.value;
 
-  if (!system) {
-    selectedAgentSystem = null;
-    localStorage.removeItem('selectedAgentSystem');  // ← Добавить
+  if (!chatId) {
+    selectedChatId = null;
+    localStorage.removeItem('selectedChatId');
     return;
   }
 
   try {
-    await setAgentSystem(system);
-    localStorage.setItem('selectedAgentSystem', system);
-    selectedAgentSystem = system;
-    showNotification(`Система агентов "${system}" выбрана`, 'success');
+    await setSelectedChat(chatId);
+    localStorage.setItem('selectedChatId', chatId);
+    selectedChatId = chatId;
+
+    // Загрузить сообщения нового чата
+    const historyResponse = await getMessageHistory(chatId);
+    if (historyResponse.messages) {
+      messageHistory = historyResponse.messages;
+      renderMessages(messageHistory);
+    }
+    showNotification(`Чат "${chatId}" выбран`, 'success');
   } catch (error) {
     showNotification('Ошибка: ' + error.message, 'error');
     // Восстановить предыдущее значение
-    e.target.value = selectedAgentSystem || '';
+    e.target.value = selectedChatId || '';
   }
 });
 
@@ -516,15 +525,15 @@ applyFormatBtn.addEventListener('click', async () => {
 
 // Очистка чата
 clearChatBtn.addEventListener('click', async () => {
-  if (!confirm('Вы уверены, что хотите очистить всю историю чата?')) {
+  if (!confirm('Вы уверены, что хотите очистить текущую историю чата?')) {
     return;
   }
 
   try {
-    await deleteMessageHistory();
+    await deleteMessageHistory(selectedChatId);
     messageHistory = [];
     renderMessages(messageHistory);
-    showNotification('История чата очищена', 'success');
+    showNotification('История текущего чата очищена', 'success');
   } catch (error) {
     showNotification('Ошибка очистки чата: ' + error.message, 'error');
   }

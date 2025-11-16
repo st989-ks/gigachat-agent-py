@@ -7,7 +7,7 @@ import asyncio
 from src.main import main
 
 
-def _install_dependency():
+def _install_dependency() -> None:
     """
     Установит зависимости из requirements.txt если они не установлены.
     """
