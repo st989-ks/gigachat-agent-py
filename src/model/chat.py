@@ -3,9 +3,10 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 class Chat(BaseModel):
-    id: Optional[str] = Field(None, description="Unique identifier of the chat")
+    id: str = Field(... , description="Unique identifier of the chat")
     name: str = Field(..., description="Title of the chat")
-    created_at: Optional[datetime] = Field(default=None, description="Date and time when the chat was created")
+    created_at: Optional[datetime] = Field(None , description="Date and time when the chat was created")
 
-    class Config:
-        orm_mode = True
+
+class ChatList(BaseModel):
+    chat: list[Chat] =  Field(..., description="Список агентных систем")

@@ -8,22 +8,19 @@ from src.ai.managers.giga_chat_manager import get_giga_chat_manager
 from src.db.db_manager import get_db_manager
 from src.model.agent import Agent
 from src.model.chat_models import GigaChatModel, ModelProvideType
-from src.model.messages import Message, MessageRequest, MessageType, MessageList, MessageOutput
+from src.model.messages import (
+    Message,
+    MessageRequest,
+    MessageType,
+    MessageList,
+    MessageOutput,
+)
 from src.tools.time import get_time_now_h_m_s
 
 logger = logging.getLogger(__name__)
 
 
-class ProcessDay8:
-    """
-    🔥 День 8. Сжатие диалога
-
-    Реализуйте механизм «сжатия истории диалога» (например, каждые 10 сообщений делать summary и хранить его вместо оригинала)
-    Проверьте, как агент продолжает вести разговор с учётом summary вместо всей истории.
-    Сравните качество ответов и использование токенов
-
-    Результат: Агент работает с компрессией и выполняет ту же работу за меньшее количество токенов
-    """
+class StandartProcess:
 
     THRESHOLD_MESSAGES: Final[int] = 10
 
@@ -33,23 +30,23 @@ class ProcessDay8:
         "2) Будь дружелюбным, точным, информативным, и лаконичный, допускается дружественная дерзость\n"
     )
 
-    agent: Agent = Agent(
+    agent_main: Agent = Agent(
         agent_id="Agent",
         name="Вассерман Анатолий",
         provider=ModelProvideType.GIGA_CHAT.value,
         temperature=0.6,
         model=GigaChatModel.STANDARD.value,
-        system_prompt="",
         max_tokens=800,
     )
 
     def __init__(
-            self,
-            session_id: str,
-            value: MessageRequest,
+        self,
+        session_id: str,
+        value: MessageRequest,
     ):
         self.message_user: Message = Message(
             id=None,
+            id_chat=value.id_chat,
             session_id=session_id,
             message_type=MessageType.USER,
             agent_id=None,
@@ -65,7 +62,9 @@ class ProcessDay8:
 
     async def process(self) -> MessageList:
 
-        list_message: List[Message] = await get_db_manager().get_messages()
+        list_message: List[Message] = await get_db_manager().get_messages(
+            id_chat=self.message_user.id_chat
+        )
 
         logger.info(f"process list_message_len={len(list_message)}")
         if len(list_message) >= self.THRESHOLD_MESSAGES:
@@ -81,8 +80,7 @@ class ProcessDay8:
 
     async def _summary(self, list_message: list[Message]) -> List[Message]:
 
-        list_of_strings = [self.format_message(m) for m in list_message]
-        messages_text = "\n\n".join(list_of_strings)
+        messages_text = "\n\n".join([self.format_message(m) for m in list_message])
 
         summary_agent: Agent = Agent(
             agent_id="Agent",
@@ -90,24 +88,26 @@ class ProcessDay8:
             provider=ModelProvideType.GIGA_CHAT.value,
             temperature=0,
             model=GigaChatModel.MAX.value,
-            system_prompt=
+            max_tokens=None,
+        )
+
+        system_sammary_prompt: str = (
             f"Суммаризируй следующие сообщения кратко и точно.\n"
             f"Выведи только ключевые моменты без введений, пояснений и дополнительной информации.\n\n"
             f"{messages_text}\n\n"
             f"ВЫВОД: только суммаризация, никаких предисловий.\n```\n\n\n---\n"
-            ,
-            max_tokens=None,
         )
 
         summary_message_from_model: MessageOutput = get_giga_chat_manager().invoke(
             agent=summary_agent,
-            input_messages=summary_agent.system_prompt,
+            input_messages=system_sammary_prompt,
             config=None,
             stop=None,
         )
 
         summary_message: Message = Message(
             id=None,
+            id_chat=self.message_user.id_chat,
             session_id=self.message_user.session_id,
             message_type=MessageType.AI,
             agent_id="Agent",
@@ -131,7 +131,10 @@ class ProcessDay8:
             provider=ModelProvideType.GIGA_CHAT.value,
             temperature=0,
             model=GigaChatModel.MAX.value,
-            system_prompt=
+            max_tokens=None,
+        )
+
+        system_optimizations_prompt: str = (
             f"Ты — движок оптимизации промптов для AI-агентов. На основе предыдущей суммаризации списка сообщений тебе нужно:\n\n"
             f"- Проанализировать полученную сводку ключевых моментов.\n"
             f"- Выявить пробелы, избыточности или места, требующие уточнений в исходном промпте.\n"
@@ -140,14 +143,12 @@ class ProcessDay8:
             f"- Выделить разделы промпта, которые можно упростить или наоборот дополнить.\n\n"
             f" СТАРЫЙ ПРОМПТ: \n\n{self.system_prompt}\n\n"
             f" СУММАРИЗАЦИЯ: \n\n{str(summary_message_from_model.message.content)}\n\n"
-            f"ВЫВОД: ТОЛЬКО ПРОМПТ, никаких предисловий.\n```\n\n\n---\n"
-            ,
-            max_tokens=None,
+            f"ВЫВОД: ТОЛЬКО ПРОМПТ, никаких предисловий.\n```\n\n\system_sammary_promptn---\n"
         )
 
         new_prompt_response: MessageOutput = get_giga_chat_manager().invoke(
             agent=new_prompt_agent,
-            input_messages=new_prompt_agent.system_prompt,
+            input_messages=system_optimizations_prompt,
             config=None,
             stop=None,
         )
@@ -163,7 +164,7 @@ class ProcessDay8:
         ]
 
         response_from_model: MessageOutput = get_giga_chat_manager().invoke(
-            agent=self.agent,
+            agent=self.agent_main,
             input_messages=list_messages,
             config=None,
             stop=None,
@@ -171,10 +172,11 @@ class ProcessDay8:
 
         response_message = Message(
             id=None,
+            id_chat=self.message_user.id_chat,
             session_id=self.message_user.session_id,
-            agent_id=self.agent.agent_id,
+            agent_id=self.agent_main.agent_id,
             message_type=MessageType.AI,
-            name=self.agent.name,
+            name=self.agent_main.name,
             timestamp=get_time_now_h_m_s(),
             message=str(response_from_model.message.content),
             prompt_tokens=response_from_model.prompt_tokens,
@@ -205,14 +207,9 @@ class ProcessDay8:
             await get_db_manager().add_message(self.message_user)
         except Exception as e:
             logger.error(f"Ошибка добавления сообщения: {e}")
-            raise HTTPException(
-                status_code=503,
-                detail="Ошибка сохранения"
-            )
+            raise HTTPException(status_code=503, detail="Ошибка сохранения")
 
-        messages: List[BaseMessage] = [
-            SystemMessage(self.system_prompt)
-        ]
+        messages: List[BaseMessage] = [SystemMessage(self.system_prompt)]
 
         for msg in list_message:
             message_type = msg.message_type
@@ -228,7 +225,7 @@ class ProcessDay8:
         messages.append(HumanMessage(content=self.message_user.message))
 
         message_from_model: MessageOutput = get_giga_chat_manager().invoke(
-            agent=self.agent,
+            agent=self.agent_main,
             input_messages=messages,
             config=None,
             stop=None,
@@ -241,10 +238,11 @@ class ProcessDay8:
 
         message = Message(
             id=None,
+            id_chat=self.message_user.id_chat,
             session_id=self.message_user.session_id,
-            agent_id=self.agent.agent_id,
+            agent_id=self.agent_main.agent_id,
             message_type=MessageType.AI,
-            name=self.agent.name,
+            name=self.agent_main.name,
             timestamp=get_time_now_h_m_s(),
             message=content,
             prompt_tokens=message_from_model.prompt_tokens,
@@ -263,8 +261,7 @@ class ProcessDay8:
         except Exception as e:
             logger.error(f"Ошибка добавления сообщения: {e}")
             raise HTTPException(
-                status_code=503,
-                detail="Ошибка сохранения сообщения в чате"
+                status_code=503, detail="Ошибка сохранения сообщения в чате"
             )
 
         return [message]

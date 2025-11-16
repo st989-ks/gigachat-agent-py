@@ -11,6 +11,7 @@ ENV/
 *.swo
 *~
 .DS_Store
+.mypy_cache
 
 # Python
 __pycache__/

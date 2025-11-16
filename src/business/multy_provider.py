@@ -4,7 +4,7 @@ import time
 
 from typing import Dict
 
-import pandas
+from pandas import DataFrame
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.ai.managers.huggingface_manager import get_hf_manager
@@ -162,7 +162,7 @@ async def main()->None:
         await asyncio.sleep(2)
 
     # Создаем DataFrame и сохраняем
-    df = pandas.DataFrame(results)
+    df = DataFrame(results)
 
     print("\n" + "="*80)
     print("📊 ИТОГОВАЯ ТАБЛИЦА РЕЗУЛЬТАТОВ:")

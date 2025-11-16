@@ -82,3 +82,14 @@
 | STANDARD    | 0.7-0.97    | Разные углы зрения, должны отличаться друг от друга |
 | PRO         | 0.5-0.7     | Качественный анализ, но проверенная логика          |
 | MAX         | 0.3-0.5     | Самая развернутая, хорошая структура                |
+
+
+Памятка для установки
+```bash
+rm -rf .venv
+python3.11 -m venv .venv --copies
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install aider-chat
+```

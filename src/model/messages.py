@@ -12,6 +12,7 @@ class MessageType(str, Enum):
 
 
 class MessageRequest(BaseModel):
+    id_chat: Optional[str] = Field(None, description="ID of the chat associated with the message")
     message: str = Field(..., description="послание для АИ")
 
 
