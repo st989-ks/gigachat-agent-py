@@ -128,16 +128,20 @@ class DbManager:
         cursor: Cursor = connection.cursor()
 
         try:
-            query: str = f'SELECT * FROM {self.TABLE_MESSAGES} WHERE 1=1'
+            query: str = f'SELECT * FROM {self.TABLE_MESSAGES}'
             params: list = []
 
+            conditions = []
             if id_chat:
-                query += ' WHERE id_chat = ?'
+                conditions.append("id_chat = ?")
                 params.append(id_chat)
 
             if session_id:
-                query += ' AND session_id = ?'
+                conditions.append("session_id = ?")
                 params.append(session_id)
+
+            if len(conditions) > 0:
+                query += " WHERE " + " AND ".join(conditions)
 
             query += ' ORDER BY created_at ASC'
 
