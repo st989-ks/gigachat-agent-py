@@ -268,17 +268,16 @@ class DbManager:
         finally:
             connection.close()
 
-    async def remove_chat(self, id_chat: str) -> bool:
+    async def remove_all_messages_chat(self, id_chat: str) -> bool:
         connection = self._get_connection()
         cursor = connection.cursor()
 
         try:
-            cursor.execute(f"DELETE FROM {self.TABLE_MESSAGES} WHERE id_chat = ?", (id_chat,))
             cursor.execute("DELETE FROM chats WHERE id_chat = ?", (id_chat,))
             connection.commit()
             return True
         except Exception as e:
-            logger.error(f"Error deleting chat: {e}")
+            logger.error(f"Error deleting messages chat: {e}")
             return False
         finally:
             connection.close()

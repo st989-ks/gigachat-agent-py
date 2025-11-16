@@ -2,11 +2,18 @@ from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, Field
 
+
 class Chat(BaseModel):
-    id: str = Field(... , description="Unique identifier of the chat")
+    id: str = Field(..., description="Unique identifier of the chat")
     name: str = Field(..., description="Title of the chat")
-    created_at: Optional[datetime] = Field(None , description="Date and time when the chat was created")
+    created_at: Optional[datetime] = Field(
+        None, description="Date and time when the chat was created"
+    )
 
 
 class ChatList(BaseModel):
-    chat: list[Chat] =  Field(..., description="Список агентных систем")
+    chats: list[Chat] = Field(..., description="Список агентных систем")
+
+
+class ChatIdRequest(BaseModel):
+    id: str = Field(..., description="Unique identifier of the chat")
