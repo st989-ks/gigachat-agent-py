@@ -41,7 +41,7 @@ class DbManager:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     session_id TEXT NOT NULL,
                     agent_id TEXT,
-                    id_chat TEXT NOT NULL,
+                    chat_id TEXT NOT NULL,
                     message_type TEXT NOT NULL,
                     name TEXT NOT NULL,
                     timestamp TEXT NOT NULL,
@@ -56,7 +56,7 @@ class DbManager:
             ''')
             cursor.execute(f'''
                 CREATE TABLE IF NOT EXISTS {self.TABLE_CHATS} (
-                    id_chat TEXT PRIMARY KEY,
+                    chat_id TEXT PRIMARY KEY,
                     name TEXT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
@@ -68,7 +68,7 @@ class DbManager:
             if existing_count == 0:
                 for chat in CHATS_DEFAULT:
                     cursor.execute(
-                        "INSERT INTO chats (id_chat, name) VALUES (?, ?)",
+                        "INSERT INTO chats (chat_id, name) VALUES (?, ?)",
                         (chat.id, chat.name)
                     )
                 connection.commit()
@@ -87,16 +87,16 @@ class DbManager:
 
         try:
             # Проверка наличия обязательных полей
-            if not all([message.id_chat, message.session_id]):
-                raise ValueError("Обязательные поля отсутствуют: id_chat или session_id")
+            if not all([message.chat_id, message.session_id]):
+                raise ValueError("Обязательные поля отсутствуют: chat_id или session_id")
             
             cursor.execute(
                 f'''
                 INSERT INTO {self.TABLE_MESSAGES} 
-                (id_chat, session_id, message_type, agent_id, name, timestamp, message, prompt_tokens,completion_tokens,request_time,price,meta)
+                (chat_id, session_id, message_type, agent_id, name, timestamp, message, prompt_tokens,completion_tokens,request_time,price,meta)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
-                    message.id_chat,
+                    message.chat_id,
                     message.session_id,
                     message.message_type.value,
                     message.agent_id,
@@ -114,7 +114,7 @@ class DbManager:
 
             message_with_id = message.model_copy(update={"id": message_id})
 
-            logger.info(f"Message added: ID={message_with_id.id}, chat={message_with_id.id_chat}")
+            logger.info(f"Message added: ID={message_with_id.id}, chat={message_with_id.chat_id}")
             return message_with_id
         except Exception as e:
             logger.error(f"DB insert error: {e}")
@@ -124,7 +124,7 @@ class DbManager:
 
     async def get_messages(
             self,
-            id_chat: Optional[str] = None,
+            chat_id: str,
             session_id: Optional[str] = None,
             limit: Optional[int] = None
     ) -> List[Message]:
@@ -136,9 +136,9 @@ class DbManager:
             params: list = []
 
             conditions = []
-            if id_chat:
-                conditions.append("id_chat = ?")
-                params.append(id_chat)
+            if chat_id:
+                conditions.append("chat_id = ?")
+                params.append(chat_id)
 
             if session_id:
                 conditions.append("session_id = ?")
@@ -159,7 +159,7 @@ class DbManager:
             messages = [
                 Message(
                     id=row['id'],
-                    id_chat=row['id_chat'],
+                    chat_id=row['chat_id'],
                     session_id=row['session_id'],
                     message_type=MessageType(row['message_type']),
                     agent_id=row['agent_id'],
@@ -183,14 +183,14 @@ class DbManager:
         finally:
             connection.close()
 
-    async def clear_messages(self, id_chat: str) -> None:
+    async def clear_messages(self, chat_id: str) -> None:
         connection = self._get_connection()
         cursor = connection.cursor()
 
         try:
-            cursor.execute(f"DELETE FROM {self.TABLE_MESSAGES} WHERE id_chat = ?", (id_chat,))
+            cursor.execute(f"DELETE FROM {self.TABLE_MESSAGES} WHERE chat_id = ?", (chat_id,))
             connection.commit()
-            logger.info(f"Messaging history cleared for chat: {id_chat}")
+            logger.info(f"Messaging history cleared for chat: {chat_id}")
         except Exception as e:
             logger.error(f"Clear DB error: {e}")
             raise
@@ -217,7 +217,7 @@ class DbManager:
 
         try:
             cursor.execute(
-                "INSERT INTO chats (id_chat, name) VALUES (?, ?)",
+                "INSERT INTO chats (chat_id, name) VALUES (?, ?)",
                 (chat.id, chat.name)
             )
             connection.commit()
@@ -250,23 +250,23 @@ class DbManager:
         cursor = connection.cursor()
 
         try:
-            cursor.execute(f"SELECT id_chat, name, created_at FROM {self.TABLE_CHATS}")
+            cursor.execute(f"SELECT chat_id, name, created_at FROM {self.TABLE_CHATS}")
             rows = cursor.fetchall()
-            return [Chat(id=row["id_chat"], name=row["name"], created_at=row["created_at"]) for row in rows]
+            return [Chat(id=row["chat_id"], name=row["name"], created_at=row["created_at"]) for row in rows]
         except Exception as e:
             logger.error(f"Error getting chats: {e}")
             raise
         finally:
             connection.close()
 
-    async def update_name_chat(self, id_chat: str, chat_name: Optional[str]) -> bool:
+    async def update_name_chat(self, chat_id: str, chat_name: Optional[str]) -> bool:
         connection = self._get_connection()
         cursor = connection.cursor()
 
         try:
             cursor.execute(
-                f"UPDATE {self.TABLE_CHATS} SET name = ? WHERE id_chat = ?",
-                (chat_name, id_chat)
+                f"UPDATE {self.TABLE_CHATS} SET name = ? WHERE chat_id = ?",
+                (chat_name, chat_id)
             )
             connection.commit()
             return True
@@ -276,12 +276,12 @@ class DbManager:
         finally:
             connection.close()
 
-    async def remove_all_messages_chat(self, id_chat: str) -> bool:
+    async def remove_all_messages_chat(self, chat_id: str) -> bool:
         connection = self._get_connection()
         cursor = connection.cursor()
 
         try:
-            cursor.execute("DELETE FROM chats WHERE id_chat = ?", (id_chat,))
+            cursor.execute(f"DELETE FROM {self.TABLE_MESSAGES} WHERE chat_id = ?", (chat_id,))
             connection.commit()
             return True
         except Exception as e:

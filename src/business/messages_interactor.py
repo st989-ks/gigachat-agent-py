@@ -27,18 +27,22 @@ logger = logging.getLogger(__name__)
 async def process_message(
     session_id: str,
     format_type: FormatType,
-    id_chat: str,
+    chat_id: str,
     value: MessageRequest,
 ) -> MessageList:
-    logger.info(f"Работа в чате {id_chat}")
-    if id_chat == CHATS_DEFAULT[0].id:
+    logger.info(f"Работа в чате {chat_id}")
+    if chat_id == CHATS_DEFAULT[0].id:
         messages: MessageList = await StandartProcess(
-            session_id=session_id, value=value
+            session_id=session_id, chat_id=chat_id, value=value
         ).process()
-    elif id_chat == CHATS_DEFAULT[1].id:
-        messages = await StandartProcess(session_id=session_id, value=value).process()
+    elif chat_id == CHATS_DEFAULT[1].id:
+        messages = await StandartProcess(
+            session_id=session_id, chat_id=chat_id, value=value
+        ).process()
     else:
-        messages = await StandartProcess(session_id=session_id, value=value).process()
+        messages = await StandartProcess(
+            session_id=session_id, chat_id=chat_id, value=value
+        ).process()
     return messages
 
 
@@ -46,16 +50,20 @@ async def delete_all_messages() -> None:
     await get_db_manager().clear_all_table_messages()
 
 
-async def delete_all_messages_chat(id_chat: str) -> None:
-    await get_db_manager().remove_all_messages_chat(id_chat=id_chat)
+async def delete_all_messages_chat(chat_id: str) -> None:
+    await get_db_manager().remove_all_messages_chat(chat_id=chat_id)
 
 
 async def get_all_messages() -> MessageList:
-    list_message: List[Message] = await get_db_manager().get_messages()
+    chats = await get_db_manager().get_chats()
+    list_message: List[Message] = []
+    for chat in chats:
+        list_message.extend(await get_db_manager().get_messages(chat_id=chat.id))
+
     return MessageList(messages=list_message)
 
-async def get_all_messages_chat(id_chat: str) -> MessageList:
-    list_message: List[Message] = await get_db_manager().get_messages(id_chat=id_chat)
+async def get_all_messages_chat(chat_id: str) -> MessageList:
+    list_message: List[Message] = await get_db_manager().get_messages(chat_id=chat_id)
     return MessageList(messages=list_message)
 
 async def get_all_chats() -> ChatList:

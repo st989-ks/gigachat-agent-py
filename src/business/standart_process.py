@@ -42,11 +42,12 @@ class StandartProcess:
     def __init__(
         self,
         session_id: str,
+        chat_id: str,
         value: MessageRequest,
     ):
         self.message_user: Message = Message(
             id=None,
-            id_chat=value.id_chat,
+            chat_id=chat_id,
             session_id=session_id,
             message_type=MessageType.USER,
             agent_id=None,
@@ -57,13 +58,13 @@ class StandartProcess:
             completion_tokens=0,
             request_time=0,
             price=0,
-            meta="",
+            meta=""
         )
 
     async def process(self) -> MessageList:
 
         list_message: List[Message] = await get_db_manager().get_messages(
-            id_chat=self.message_user.id_chat
+            chat_id=self.message_user.chat_id
         )
 
         logger.info(f"process list_message_len={len(list_message)}")
@@ -107,7 +108,7 @@ class StandartProcess:
 
         summary_message: Message = Message(
             id=None,
-            id_chat=self.message_user.id_chat,
+            chat_id=self.message_user.chat_id,
             session_id=self.message_user.session_id,
             message_type=MessageType.AI,
             agent_id="Agent",
@@ -172,7 +173,7 @@ class StandartProcess:
 
         response_message = Message(
             id=None,
-            id_chat=self.message_user.id_chat,
+            chat_id=self.message_user.chat_id,
             session_id=self.message_user.session_id,
             agent_id=self.agent_main.agent_id,
             message_type=MessageType.AI,
@@ -190,11 +191,15 @@ class StandartProcess:
             ),
         )
 
-        await get_db_manager().clear_all_table_messages()
+        await get_db_manager().remove_all_messages_chat(chat_id=self.message_user.chat_id)
 
-        summary_message_db: Message = await get_db_manager().add_message(summary_message)  # type: ignore
-        message_user_db: Message = await get_db_manager().add_message(self.message_user)  # type: ignore
-        message_db: Message = await get_db_manager().add_message(response_message)  # type: ignore
+        try:
+            summary_message_db: Message = await get_db_manager().add_message(summary_message)  # type: ignore
+            message_user_db: Message = await get_db_manager().add_message(self.message_user)  # type: ignore
+            message_db: Message = await get_db_manager().add_message(response_message)  # type: ignore
+        except Exception as e:
+            print(f"❌ Ошибка добавления сообщений на уровне процесса суммаризации: {e}")
+            raise HTTPException(status_code=503, detail="Ошибка сохранения")
 
         return [
             summary_message_db,
@@ -238,7 +243,7 @@ class StandartProcess:
 
         message = Message(
             id=None,
-            id_chat=self.message_user.id_chat,
+            chat_id=self.message_user.chat_id,
             session_id=self.message_user.session_id,
             agent_id=self.agent_main.agent_id,
             message_type=MessageType.AI,

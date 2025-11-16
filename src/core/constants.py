@@ -7,8 +7,6 @@ from typing import Final
 from src.model.chat import Chat
 from datetime import datetime
 
-
-KEY_SELECTED_AGENT_SYSTEMS: Final[str] = "KEY_SELECTED_AGENT_SYSTEMS"
 KEY_SELECTED_CHAT: Final[str] = "KEY_SELECTED_CHAT"
 KEY_SELECTED_FORMAT_TYPE_REQUEST: Final[str] = "KEY_SELECTED_FORMAT_TYPE_REQUEST"
 KEY_SELECTED_FORMAT_REQUEST: Final[str] = "KEY_SELECTED_FORMAT_REQUEST"

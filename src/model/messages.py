@@ -12,13 +12,12 @@ class MessageType(str, Enum):
 
 
 class MessageRequest(BaseModel):
-    id_chat: Optional[str] = Field(None, description="ID of the chat associated with the message")
     message: str = Field(..., description="послание для АИ")
 
 
 class Message(BaseModel):
     id: Optional[int] = Field(None, description="ID сообщения")
-    id_chat: Optional[str] = Field(None, description="ID of the chat associated with the message")
+    chat_id: str = Field(..., description="ID of the chat associated with the message")
     session_id: str = Field(..., description="Id сессии")
     message_type: MessageType = Field(..., description="Типы сообщений")
     agent_id: Optional[str] = Field(..., description="Id агента, если это он")

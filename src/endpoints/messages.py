@@ -25,35 +25,35 @@ async def message(
         request: Request
 ) -> MessageList:
     await verify(request=request)
-    id_chat: Optional[str] = request.cookies.get(KEY_SELECTED_CHAT)
+    chat_id: Optional[str] = request.cookies.get(KEY_SELECTED_CHAT)
     format_type_text: Optional[str] = request.cookies.get(KEY_SELECTED_FORMAT_TYPE_REQUEST)
-    id_session: Optional[str] = request.cookies.get(KEY_SESSION_ID)
+    session_id: Optional[str] = request.cookies.get(KEY_SESSION_ID)
 
-    if not id_session:
-        id_session = ""
+    if not session_id:
+        session_id = ""
 
-    if not id_chat:
-        id_chat = CHATS_DEFAULT[0].id
+    if not chat_id:
+        chat_id = CHATS_DEFAULT[0].id
 
     try:
         format_type: FormatType = FormatType(format_type_text)
     except ValueError:
         logger.error(f"Неверное значение FormatType {format_type_text}")
-        format_type: FormatType = FormatType.DEFAULT
+        format_type = FormatType.DEFAULT
 
     return await process_message(
-        session_id=id_session,
+        session_id=session_id,
         format_type=format_type,
-        id_chat=id_chat,
+        chat_id=chat_id,
         value=value,
     )
 
 
 @router.get("/v1/history_message")
 async def get_history_message(
-        id: str = Query(..., description="Chat ID"),
-        response: Response = None,
-        request: Request = None
+        response: Response,
+        request: Request,
+        id: str = Query(..., description="Chat ID")
 ) -> MessageList:
     await verify(request=request)
     return await get_all_messages_chat(id)
@@ -61,12 +61,12 @@ async def get_history_message(
 
 @router.delete("/v1/history_message")
 async def delete_history_message(
-        id: int = Query(..., description="Chat ID"),
-        response: Response = None,
-        request: Request = None
+        response: Response,
+        request: Request,
+        id: str = Query(..., description="Chat ID")
 ) -> StandardResponse:
     await verify(request=request)
-    await delete_all_messages_chat(id_chat=id)
+    await delete_all_messages_chat(chat_id=id)
     return StandardResponse(
         message="История удалена",
         success=True

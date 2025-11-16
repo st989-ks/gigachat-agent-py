@@ -67,9 +67,9 @@ function getCookie(name) {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) {
-      const cookieValue = parts.pop().split(';').shift();
-      console.log(`🍪 Куки ${name}=${cookieValue}`);
-      return cookieValue;
+    const cookieValue = parts.pop().split(';').shift();
+    console.log(`🍪 Куки ${name}=${cookieValue}`);
+    return cookieValue;
   }
   console.log(`❌ Куки ${name} не найдена`);
   return null;
@@ -236,24 +236,24 @@ function renderMessage(message) {
   content.appendChild(header)
   // --- Метаданные агента ---
   if (!isUser) {
-      const metadata = document.createElement('div');
-      metadata.className = 'message__metadata'
-      // Форматирование данных
-      const promptTokens = typeof message.prompt_tokens === 'number' ? message.prompt_tokens : '-';
-      const completionTokens = typeof message.completion_tokens === 'number' ? message.completion_tokens : '-';
-      const requestTime = typeof message.request_time === 'number'
-          ? (message.request_time / 1000).toFixed(3)
-          : '-';
-      const price = typeof message.price === 'number'
-          ? message.price.toFixed(7)
-          : '-';
-      let metaBlock = '';
-      if (message.meta && String(message.meta).trim() !== '') {
-          metaBlock = `\n${message.meta}`;
-      }
-      metadata.textContent =
-          `📊 prompt: ${promptTokens} | completion: ${completionTokens} | time: ${requestTime}s | price: ${price}${metaBlock}`;
-      content.appendChild(metadata);
+    const metadata = document.createElement('div');
+    metadata.className = 'message__metadata'
+    // Форматирование данных
+    const promptTokens = typeof message.prompt_tokens === 'number' ? message.prompt_tokens : '-';
+    const completionTokens = typeof message.completion_tokens === 'number' ? message.completion_tokens : '-';
+    const requestTime = typeof message.request_time === 'number'
+      ? (message.request_time / 1000).toFixed(3)
+      : '-';
+    const price = typeof message.price === 'number'
+      ? message.price.toFixed(7)
+      : '-';
+    let metaBlock = '';
+    if (message.meta && String(message.meta).trim() !== '') {
+      metaBlock = `\n${message.meta}`;
+    }
+    metadata.textContent =
+      `📊 prompt: ${promptTokens} | completion: ${completionTokens} | time: ${requestTime}s | price: ${price}${metaBlock}`;
+    content.appendChild(metadata);
   }
   // --- Конец блока метаданных агента ---
 
@@ -281,14 +281,14 @@ function renderMessages(messages) {
 
 
 async function isAuthorized() {
-    try {
-        const response = await fetch('/v1/check-auth', {
-            credentials: 'include'
-        });
-        return response.ok;
-    } catch {
-        return false;
-    }
+  try {
+    const response = await fetch('/v1/check-auth', {
+      credentials: 'include'
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 // Инициализация при загрузке страницы
@@ -449,7 +449,7 @@ chatSelector.addEventListener('change', async (e) => {
 
   if (!chatId) {
     selectedChatId = null;
-    localStorage.removeItem('selectedChatId');  
+    localStorage.removeItem('selectedChatId');
     return;
   }
 
@@ -457,7 +457,7 @@ chatSelector.addEventListener('change', async (e) => {
     await setSelectedChat(chatId);
     localStorage.setItem('selectedChatId', chatId);
     selectedChatId = chatId;
-    
+
     // Загрузить сообщения нового чата
     const historyResponse = await getMessageHistory(chatId);
     if (historyResponse.messages) {
