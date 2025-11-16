@@ -5,10 +5,10 @@ from fastapi import APIRouter, HTTPException
 from starlette.responses import Response
 from starlette.requests import Request
 
-from src.model.agent import Agent
 from src.business.verify import verify
 from src.business.messages_interactor import get_all_chats, get_all_messages_chat
 from src.core.constants import KEY_SELECTED_CHAT, KEY_SESSION_ID, KEY_PASSWORD_SALT, ONE_DAY_IN_SECONDS
+from src.model.messages import MessageList
 from src.model.chat import ChatList, Chat, ChatIdRequest
 from src.model.common import StandardResponse
 
@@ -26,7 +26,7 @@ async def get_chats(
         request: Request
 ) -> ChatList:
     await verify(request=request)
-    list_chats: ChatList = get_all_chats()
+    list_chats: ChatList = await get_all_chats()
     logger.info(f"Отправка списка чатов: {list_chats}")
     return list_chats
 
