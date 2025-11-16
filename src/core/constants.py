@@ -32,4 +32,3 @@ CHATS_DEFAULT: Final[list[Chat]] =[
         created_at=None
     ),
 ] 
-
