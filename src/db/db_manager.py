@@ -246,11 +246,44 @@ class DbManager:
         finally:
             connection.close()
 
-    async def update_chat_system_prompt(chat_id: str, system_prompt:str) -> Chat:
-        return Chat()
+    async def update_chat_system_prompt(self, chat_id: str, system_prompt: str) -> bool:
+        connection = self._get_connection()
+        cursor = connection.cursor()
 
-    async def get_chat_by_id(chat_id: str) -> Chat:
-        return Chat()
+        try:
+            cursor.execute(
+                f"UPDATE {self.TABLE_CHATS} SET system_prompt = ? WHERE chat_id = ?",
+                (system_prompt, chat_id)
+            )
+            connection.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Error updating chat system prompt: {e}")
+            return False
+        finally:
+            connection.close()
+
+    async def get_chat_by_id(self, chat_id: str) -> Optional[Chat]:
+        connection = self._get_connection()
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(f"SELECT * FROM {self.TABLE_CHATS} WHERE chat_id = ?", (chat_id,))
+            row = cursor.fetchone()
+            if row:
+                return Chat(
+                    id=row["chat_id"],
+                    name=row["name"],
+                    system_prompt=row["system_prompt"],
+                    created_at=row["created_at"]
+                )
+            else:
+                return None
+        except Exception as e:
+            logger.error(f"Error fetching chat by ID: {e}")
+            return None
+        finally:
+            connection.close()
 
     async def get_chats(self) -> List[Chat]:
         connection = self._get_connection()
