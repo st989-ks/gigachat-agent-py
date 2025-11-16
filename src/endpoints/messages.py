@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -9,7 +9,7 @@ from src.business.messages_interactor import process_message, delete_all_message
 from src.business.verify import verify
 from src.core.constants import KEY_SELECTED_FORMAT_TYPE_REQUEST, CHATS_DEFAULT, KEY_SELECTED_CHAT, KEY_SESSION_ID
 from src.model.common import StandardResponse
-from src.model.chat import ChatList, Chat, ChatIdRequest
+from src.model.chat import ChatList, Chat
 from src.model.messages import MessageRequest, Message, MessageList
 from src.model.tape_formats_response import FormatType
 
@@ -51,22 +51,22 @@ async def message(
 
 @router.get("/v1/history_message")
 async def get_history_message(
-        value: ChatIdRequest,
-        response: Response,
-        request: Request
+        id: str = Query(..., description="Chat ID"),
+        response: Response = None,
+        request: Request = None
 ) -> MessageList:
     await verify(request=request)
-    return await get_all_messages_chat(value.id)
+    return await get_all_messages_chat(id)
 
 
 @router.delete("/v1/history_message")
 async def delete_history_message(
-        value: ChatIdRequest,
-        response: Response,
-        request: Request
+        id: int = Query(..., description="Chat ID"),
+        response: Response = None,
+        request: Request = None
 ) -> StandardResponse:
     await verify(request=request)
-    await delete_all_messages_chat(id_chat=value.id)
+    await delete_all_messages_chat(id_chat=id)
     return StandardResponse(
         message="История удалена",
         success=True

@@ -86,6 +86,10 @@ class DbManager:
         cursor = connection.cursor()
 
         try:
+            # Проверка наличия обязательных полей
+            if not all([message.id_chat, message.session_id]):
+                raise ValueError("Обязательные поля отсутствуют: id_chat или session_id")
+            
             cursor.execute(
                 f'''
                 INSERT INTO {self.TABLE_MESSAGES} 
