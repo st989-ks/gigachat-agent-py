@@ -24,13 +24,13 @@ class StandartProcess:
 
     THRESHOLD_MESSAGES: Final[int] = 10
 
-    system_prompt: str = (
+    default_system_prompt: str = (
         "Ты  хороший друг и собеседник. Роль:\n"
-        "1) Отвечать на вопросы, с размышнением.\n"
+        "1) Отвечать на вопросы, с размышлением.\n"
         "2) Будь дружелюбным, точным, информативным, и лаконичный, допускается дружественная дерзость\n"
     )
 
-    agent_main: Agent = Agent(
+    default_agent_main: Agent = Agent(
         agent_id="Agent",
         name="Вассерман Анатолий",
         provider=ModelProvideType.GIGA_CHAT.value,
@@ -45,6 +45,7 @@ class StandartProcess:
         chat_id: str,
         value: MessageRequest,
     ):
+        self.chat = asyncio.run(get_db_manager().get_chat_by_id(chat_id))  # Получаем объект чата
         self.message_user: Message = Message(
             id=None,
             chat_id=chat_id,
@@ -62,7 +63,6 @@ class StandartProcess:
         )
 
     async def process(self) -> MessageList:
-
         list_message: List[Message] = await get_db_manager().get_messages(
             chat_id=self.message_user.chat_id
         )
@@ -80,7 +80,6 @@ class StandartProcess:
         return f"[{msg.timestamp}] {msg.name} ({msg.message_type}): {msg.message}\n"
 
     async def _summary(self, list_message: list[Message]) -> List[Message]:
-
         messages_text = "\n\n".join([self.format_message(m) for m in list_message])
 
         summary_agent: Agent = Agent(
@@ -142,7 +141,7 @@ class StandartProcess:
             f"- Внести улучшения в формулировках промпта, чтобы повысить релевантность и эффективность работы агента.\n"
             f"- Исправить тон, стиль и структуру запроса соглассно суммаризации.\n"
             f"- Выделить разделы промпта, которые можно упростить или наоборот дополнить.\n\n"
-            f" СТАРЫЙ ПРОМПТ: \n\n{self.system_prompt}\n\n"
+            f" СТАРЫЙ ПРОМПТ: \n\n{self.chat.system_prompt or self.default_system_prompt}\n\n"
             f" СУММАРИЗАЦИЯ: \n\n{str(summary_message_from_model.message.content)}\n\n"
             f"ВЫВОД: ТОЛЬКО ПРОМПТ, никаких предисловий.\n```\n\n\system_sammary_promptn---\n"
         )
@@ -165,7 +164,7 @@ class StandartProcess:
         ]
 
         response_from_model: MessageOutput = get_giga_chat_manager().invoke(
-            agent=self.agent_main,
+            agent=self.default_agent_main,
             input_messages=list_messages,
             config=None,
             stop=None,
@@ -175,9 +174,9 @@ class StandartProcess:
             id=None,
             chat_id=self.message_user.chat_id,
             session_id=self.message_user.session_id,
-            agent_id=self.agent_main.agent_id,
+            agent_id=self.default_agent_main.agent_id,
             message_type=MessageType.AI,
-            name=self.agent_main.name,
+            name=self.default_agent_main.name,
             timestamp=get_time_now_h_m_s(),
             message=str(response_from_model.message.content),
             prompt_tokens=response_from_model.prompt_tokens,
@@ -214,7 +213,7 @@ class StandartProcess:
             logger.error(f"Ошибка добавления сообщения: {e}")
             raise HTTPException(status_code=503, detail="Ошибка сохранения")
 
-        messages: List[BaseMessage] = [SystemMessage(self.system_prompt)]
+        messages: List[BaseMessage] = [SystemMessage(self.chat.system_prompt or self.default_system_prompt)]
 
         for msg in list_message:
             message_type = msg.message_type
@@ -230,7 +229,7 @@ class StandartProcess:
         messages.append(HumanMessage(content=self.message_user.message))
 
         message_from_model: MessageOutput = get_giga_chat_manager().invoke(
-            agent=self.agent_main,
+            agent=self.default_agent_main,
             input_messages=messages,
             config=None,
             stop=None,
@@ -245,9 +244,9 @@ class StandartProcess:
             id=None,
             chat_id=self.message_user.chat_id,
             session_id=self.message_user.session_id,
-            agent_id=self.agent_main.agent_id,
+            agent_id=self.default_agent_main.agent_id,
             message_type=MessageType.AI,
-            name=self.agent_main.name,
+            name=self.default_agent_main.name,
             timestamp=get_time_now_h_m_s(),
             message=content,
             prompt_tokens=message_from_model.prompt_tokens,

@@ -58,6 +58,7 @@ class DbManager:
                 CREATE TABLE IF NOT EXISTS {self.TABLE_CHATS} (
                     chat_id TEXT PRIMARY KEY,
                     name TEXT NULL,
+                    system_prompt TEXT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
@@ -68,8 +69,8 @@ class DbManager:
             if existing_count == 0:
                 for chat in CHATS_DEFAULT:
                     cursor.execute(
-                        "INSERT INTO chats (chat_id, name) VALUES (?, ?)",
-                        (chat.id, chat.name)
+                        "INSERT INTO chats (chat_id, name, system_prompt) VALUES (?, ?, ?)",
+                        (chat.id, chat.name, chat.system_prompt)
                     )
                 connection.commit()
                 logger.info(f"Default chats created: {CHATS_DEFAULT}")
@@ -217,8 +218,8 @@ class DbManager:
 
         try:
             cursor.execute(
-                "INSERT INTO chats (chat_id, name) VALUES (?, ?)",
-                (chat.id, chat.name)
+                "INSERT INTO chats (chat_id, name, system_prompt) VALUES (?, ?, ?)",
+                (chat.id, chat.name, chat.system_prompt)
             )
             connection.commit()
             return chat.id
@@ -250,9 +251,9 @@ class DbManager:
         cursor = connection.cursor()
 
         try:
-            cursor.execute(f"SELECT chat_id, name, created_at FROM {self.TABLE_CHATS}")
+            cursor.execute(f"SELECT chat_id, name, system_prompt, created_at FROM {self.TABLE_CHATS}")
             rows = cursor.fetchall()
-            return [Chat(id=row["chat_id"], name=row["name"], created_at=row["created_at"]) for row in rows]
+            return [Chat(id=row["chat_id"], name=row["name"], system_prompt=row["system_prompt"], created_at=row["created_at"]) for row in rows]
         except Exception as e:
             logger.error(f"Error getting chats: {e}")
             raise
