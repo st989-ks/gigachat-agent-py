@@ -4,7 +4,7 @@ from typing import Dict, Optional, Tuple, Final, Any, List, Sequence
 
 from gigachat.models import TokensCount
 from langchain_core.language_models import LanguageModelInput
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.prompt_values import PromptValue
 from langchain_core.runnables import RunnableConfig
 
@@ -127,7 +127,7 @@ class GigaChatModelManager:
         total_token_counts_send: int = sum(tc.tokens for tc in token_counts_send)
 
         start_time: float = time.time()
-        response: AIMessage = model.invoke(
+        response: BaseMessage = model.invoke(
             input=input_messages,
             config=config,
             stop=stop,

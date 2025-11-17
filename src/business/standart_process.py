@@ -1,6 +1,10 @@
 import logging
 import asyncio
-from typing import List, Final
+from typing import (
+    List, 
+    Final,
+    Optional
+)
 
 from fastapi import HTTPException
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage, SystemMessage
@@ -193,7 +197,13 @@ class StandartProcess:
         )
 
         await get_db_manager().remove_all_messages_chat(chat_id=self.message_user.chat_id)
-        self.chat = await get_db_manager().update_chat_system_prompt(system_prompt=self.system_prompt)
+        update_chat: Optional[Chat] =await get_db_manager().update_chat_system_prompt(
+            chat_id = self.chat.id,
+            system_prompt=self.system_prompt
+        )
+
+        if update_chat:
+            self.chat = update_chat
 
         try:
             summary_message_db: Message = await get_db_manager().add_message(summary_message)  # type: ignore

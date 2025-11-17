@@ -63,17 +63,13 @@ class DbManager:
                 )
             ''')
 
-            cursor.execute(f'''SELECT COUNT(*) FROM {self.TABLE_CHATS}''')
-            existing_count = cursor.fetchone()[0]
-
-            if existing_count == 0:
-                for chat in CHATS_DEFAULT:
+            for chat in CHATS_DEFAULT:
+                cursor.execute(f"SELECT 1 FROM {self.TABLE_CHATS} WHERE chat_id=?", (chat.id,))
+                if not cursor.fetchone():
                     cursor.execute(
-                        "INSERT INTO chats (chat_id, name, system_prompt) VALUES (?, ?, ?)",
+                        f"INSERT INTO {self.TABLE_CHATS} (chat_id, name, system_prompt) VALUES (?, ?, ?)",
                         (chat.id, chat.name, chat.system_prompt)
                     )
-                connection.commit()
-                logger.info(f"Default chats created: {CHATS_DEFAULT}")
 
             connection.commit()
             logger.info(f"Basis initialized: {self.db_path}")
@@ -246,7 +242,7 @@ class DbManager:
         finally:
             connection.close()
 
-    async def update_chat_system_prompt(self, chat_id: str, system_prompt: str) -> bool:
+    async def update_chat_system_prompt(self, chat_id: str, system_prompt: str) -> Optional[Chat]:
         connection = self._get_connection()
         cursor = connection.cursor()
 
@@ -256,10 +252,21 @@ class DbManager:
                 (system_prompt, chat_id)
             )
             connection.commit()
-            return True
+
+            cursor.execute(f"SELECT * FROM {self.TABLE_CHATS} WHERE chat_id = ?", (chat_id,))
+            row = cursor.fetchone()
+            if row:
+                return Chat(
+                    id=row["chat_id"],
+                    name=row["name"],
+                    system_prompt=row["system_prompt"],
+                    created_at=row["created_at"]
+                )
+            else:
+                return None
         except Exception as e:
             logger.error(f"Error updating chat system prompt: {e}")
-            return False
+            return None
         finally:
             connection.close()
 
