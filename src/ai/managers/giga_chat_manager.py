@@ -178,7 +178,7 @@ class GigaChatModelManager:
 
         if isinstance(input_data, Sequence):
             return [
-                msg.content if hasattr(msg, "content")
+                msg.content if hasattr(msg, "content") # type: ignore
                 else msg.get("content", str(msg)) if isinstance(msg, dict)
                 else str(msg)
                 for msg in input_data
