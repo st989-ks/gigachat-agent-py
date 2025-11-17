@@ -63,17 +63,13 @@ class DbManager:
                 )
             ''')
 
-            cursor.execute(f'''SELECT COUNT(*) FROM {self.TABLE_CHATS}''')
-            existing_count = cursor.fetchone()[0]
-
-            if existing_count == 0:
-                for chat in CHATS_DEFAULT:
+            for chat in CHATS_DEFAULT:
+                cursor.execute(f"SELECT 1 FROM {self.TABLE_CHATS} WHERE chat_id=?", (chat.id,))
+                if not cursor.fetchone():
                     cursor.execute(
-                        "INSERT INTO chats (chat_id, name, system_prompt) VALUES (?, ?, ?)",
+                        f"INSERT INTO {self.TABLE_CHATS} (chat_id, name, system_prompt) VALUES (?, ?, ?)",
                         (chat.id, chat.name, chat.system_prompt)
                     )
-                connection.commit()
-                logger.info(f"Default chats created: {CHATS_DEFAULT}")
 
             connection.commit()
             logger.info(f"Basis initialized: {self.db_path}")
