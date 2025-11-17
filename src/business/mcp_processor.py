@@ -325,11 +325,15 @@ class McpProcessor:
             env=None,
         )
 
+        logger.info(f"🔌 Подключение: {server_command} {' '.join(server_args)}")
+        
         async with stdio_client(server_params) as (read, write):
-            # Инициализация сессии
-            await write.initialize()
-
-            # Получение списка инструментов
-            tools_response = await write.list_tools()
-
-            return tools_response.tools
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                
+                logger.info("📥 Получение инструментов...")
+                tools_response = await session.list_tools()
+                
+                logger.info(f"✅ Получено {len(tools_response.tools)} инструментов")
+                
+                return tools_response.tools
