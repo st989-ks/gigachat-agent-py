@@ -10,6 +10,7 @@ from src.db.db_manager import get_db_manager
 from src.model.agent import Agent
 from src.core.constants import CHATS_DEFAULT
 from src.model.chat import Chat, ChatList
+from src.business.mcp_processor import McpProcessor
 from src.model.chat_models import GigaChatModel, ModelProvideType
 from src.model.messages import (
     Message,
@@ -30,7 +31,7 @@ async def process_message(
     chat_id: str,
     value: MessageRequest,
 ) -> MessageList:
-    chat: Chat = await get_db_manager().get_chat_by_id(chat_id)
+    chat: Chat = await get_db_manager().get_chat_by_id(chat_id) # type: ignore
     logger.info(f"Работа в чате {chat_id}")
     if chat_id == CHATS_DEFAULT[0].id:
         messages: MessageList = await StandartProcess(
@@ -38,6 +39,10 @@ async def process_message(
         ).process()
     elif chat_id == CHATS_DEFAULT[1].id:
         messages = await StandartProcess(
+            session_id=session_id, chat=chat, value=value
+        ).process()
+    elif chat_id == CHATS_DEFAULT[2].id:
+        messages = await McpProcessor(
             session_id=session_id, chat=chat, value=value
         ).process()
     else:

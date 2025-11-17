@@ -23,11 +23,19 @@ CHATS_DEFAULT: Final[list[Chat]] =[
     Chat(
         id="1",
         name="STANDART",
+        system_prompt = None,
         created_at=None
     ),
     Chat(
         id="2",
         name="DAY_9",
+        system_prompt = None,
         created_at=None
+    ),
+    Chat(
+        id="mcp_default",
+        name="MCP Tools Chat",
+        created_at=None,
+        system_prompt="Ты — агент для работы с MCP инструментами. Помогай пользователю использовать доступные инструменты."
     ),
 ] 

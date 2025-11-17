@@ -65,7 +65,7 @@ class HuggingFaceModelManager:
                 temperature=agent.temperature,
             )
 
-        return AIMessage(content=response.choices[0].message.content)
+        return AIMessage(content=response.choices[0].message.content) # type: ignore
 
 # Singleton
 _hf_manager: Optional[HuggingFaceModelManager] = None
