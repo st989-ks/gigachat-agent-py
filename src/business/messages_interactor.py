@@ -10,7 +10,7 @@ from src.db.db_manager import get_db_manager
 from src.model.agent import Agent
 from src.core.constants import CHATS_DEFAULT
 from src.model.chat import Chat, ChatList
-from src.business.mcp_processor import MCPProcessor
+from src.business.mcp_processor import McpProcessor
 from src.model.chat_models import GigaChatModel, ModelProvideType
 from src.model.messages import (
     Message,
@@ -42,7 +42,7 @@ async def process_message(
             session_id=session_id, chat=chat, value=value
         ).process()
     elif chat_id == CHATS_DEFAULT[2].id:
-        messages = await MCPProcessor(
+        messages = await McpProcessor(
             session_id=session_id, chat=chat, value=value
         ).process()
     else:
