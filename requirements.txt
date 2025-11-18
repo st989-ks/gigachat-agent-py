@@ -1,5 +1,8 @@
 fastapi
 uvicorn
+langgraph
+langchain-mcp-adapters
+langgraph-prebuilt
 langchain-core==0.3.61
 langchain-gigachat==0.3.12
 mcp[cli]

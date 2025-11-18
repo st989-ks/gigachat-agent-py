@@ -11,6 +11,10 @@ from langchain_core.runnables import RunnableConfig
 from src.model.agent import Agent
 from src.model.chat_models import GigaChatModel
 from langchain_gigachat.chat_models import GigaChat
+from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_mcp_adapters.sessions import Connection
+from langgraph.prebuilt import create_react_agent
+
 
 from src.model.messages import MessageOutput
 
@@ -166,6 +170,51 @@ class GigaChatModelManager:
                 f"Локальный расчет токенов (send) {str(total_token_counts_send)}\n"
                 f"Локальный расчет токенов (accepted) {str(total_token_counts_accepted)}\n"
             )
+        )
+
+    async def invoke_with_tools(
+            self,
+            connections: dict[str, Connection],
+            agent: Agent,
+            input_messages: LanguageModelInput,
+    ) -> MessageOutput:
+        logger.info("GigaChatModelManager invoke with tools")
+
+        model = self.get_model(
+            model_type=GigaChatModel(agent.model),
+            temperature=agent.temperature,
+            max_tokens=agent.max_tokens,
+        )
+
+        start_time: float = time.time()
+
+        client = MultiServerMCPClient(connections=connections)
+
+        tools = await client.get_tools()
+        
+        react_agent = create_react_agent(model, tools)
+
+        agent_output:dict = await react_agent.ainvoke(input={"messages": input_messages})
+        logger.info(f"[agent_output] {agent_output}")
+        response: BaseMessage = agent_output["messages"][-1] 
+
+        response_time: float = time.time() - start_time
+        response_metadata = response.response_metadata.get('token_usage', {})
+        prompt_tokens = response_metadata.get('prompt_tokens', 0)
+        completion_tokens = response_metadata.get('completion_tokens', 0)
+        if agent.model == GigaChatModel.MAX.value:
+            price = self.COST_TOKEN_MAX * (prompt_tokens + completion_tokens)
+        elif agent.model == GigaChatModel.PRO.value:
+            price = self.COST_TOKEN_PRO * (prompt_tokens + completion_tokens)
+        else:
+            price = self.COST_TOKEN * (prompt_tokens + completion_tokens)
+        return MessageOutput(
+            message=response,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            request_time=response_time,
+            price=price,
+            meta="Agent with MCP tools invoked"
         )
 
     @staticmethod

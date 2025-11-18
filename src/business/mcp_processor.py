@@ -1,5 +1,4 @@
 import logging
-import asyncio
 from typing import List, Final, Dict, Optional
 
 from fastapi import HTTPException
@@ -15,10 +14,10 @@ from src.model.messages import (
     MessageList,
     MessageOutput,
 )
-from src.tools.time import get_time_now_h_m_s
 from src.db.db_manager import get_db_manager
 from src.model.chat_models import ModelProvideType, GigaChatModel
 from mcp.client.stdio import stdio_client, StdioServerParameters
+
 from mcp.types import Tool
 from mcp import ClientSession
 
@@ -28,7 +27,6 @@ logger = logging.getLogger(__name__)
 
 
 class McpProcessor:
-
     THRESHOLD_MESSAGES: Final[int] = 10
 
     default_system_prompt: str = (
@@ -47,10 +45,10 @@ class McpProcessor:
     )
 
     def __init__(
-        self,
-        session_id: str,
-        chat: Chat,
-        value: MessageRequest,
+            self,
+            session_id: str,
+            chat: Chat,
+            value: MessageRequest,
     ):
         self.chat: Chat = chat
         self.message_user: Message = Message(
@@ -191,42 +189,16 @@ class McpProcessor:
 
         logger.info(f"New - system_prompt\n{self.system_prompt}\n")
 
-        list_messages: List[BaseMessage] = [
-            SystemMessage(self.system_prompt),
-            AIMessage(summary_message.message),
-            HumanMessage(self.message_user.message),
-        ]
-
-        response_from_model: MessageOutput = get_giga_chat_manager().invoke(
-            agent=self.default_agent_main,
-            input_messages=list_messages,
-            config=None,
-            stop=None,
-        )
-
-        response_message = Message(
-            id=None,
-            chat_id=self.message_user.chat_id,
-            session_id=self.message_user.session_id,
-            agent_id=self.default_agent_main.agent_id,
-            message_type=MessageType.AI,
-            name=self.default_agent_main.name,
-            timestamp=get_time_now_h_m_s(),
-            message=str(response_from_model.message.content),
-            prompt_tokens=response_from_model.prompt_tokens,
-            completion_tokens=response_from_model.completion_tokens,
-            request_time=response_from_model.request_time,
-            price=response_from_model.price,
-            meta=(
-                f"{response_from_model.meta}\n"
-                "Новый промпт:\n"
-                f"{self.system_prompt}"
-            ),
+        summary_message.meta = (
+            f"{summary_message.meta}\n"
+            "Новый промпт:\n"
+            f"{self.system_prompt}"
         )
 
         await get_db_manager().remove_all_messages_chat(
             chat_id=self.message_user.chat_id
         )
+
         update_chat: Optional[Chat] = await get_db_manager().update_chat_system_prompt(
             chat_id=self.chat.id, system_prompt=self.system_prompt
         )
@@ -236,19 +208,13 @@ class McpProcessor:
 
         try:
             summary_message_db: Message = await get_db_manager().add_message(summary_message)  # type: ignore
-            message_user_db: Message = await get_db_manager().add_message(self.message_user)  # type: ignore
-            message_db: Message = await get_db_manager().add_message(response_message)  # type: ignore
         except Exception as e:
             print(
                 f"❌ Ошибка добавления сообщений на уровне процесса суммаризации: {e}"
             )
             raise HTTPException(status_code=503, detail="Ошибка сохранения")
 
-        return [
-            summary_message_db,
-            message_user_db,
-            message_db,
-        ]
+        return await self._process_default([summary_message_db])
 
     async def _process_default(self, list_message: list[Message]) -> List[Message]:
         try:
@@ -274,17 +240,16 @@ class McpProcessor:
 
         messages.append(HumanMessage(content=self.message_user.message))
 
-        message_from_model: MessageOutput = get_giga_chat_manager().invoke(
+        message_from_model: MessageOutput = await get_giga_chat_manager().invoke_with_tools(
+            connections={
+                "ipinfo_lite": {
+                    "url": "http://127.0.0.1:5555/sse",
+                    "transport": "sse",
+                }
+            },
             agent=self.default_agent_main,
             input_messages=messages,
-            config=None,
-            stop=None,
         )
-
-        if isinstance(message_from_model.message.content, str):
-            content = message_from_model.message.content
-        else:
-            content = str(message_from_model.message.content)
 
         message = Message(
             id=None,
@@ -294,7 +259,7 @@ class McpProcessor:
             message_type=MessageType.AI,
             name=self.default_agent_main.name,
             timestamp=get_time_now_h_m_s(),
-            message=content,
+            message=str(message_from_model.message.content),
             prompt_tokens=message_from_model.prompt_tokens,
             completion_tokens=message_from_model.completion_tokens,
             request_time=message_from_model.request_time,
@@ -316,8 +281,9 @@ class McpProcessor:
 
         return [message]
 
+    @staticmethod
     async def get_mcp_tools(
-        self, server_command: str, server_args: List[str] = []
+            server_command: str, server_args: List[str] = []
     ) -> List[Tool]:
         server_params = StdioServerParameters(
             command=server_command,
@@ -326,14 +292,14 @@ class McpProcessor:
         )
 
         logger.info(f"🔌 Подключение: {server_command} {' '.join(server_args)}")
-        
+
         async with stdio_client(server_params) as (read, write):
             async with ClientSession(read, write) as session:
                 await session.initialize()
-                
+
                 logger.info("📥 Получение инструментов...")
                 tools_response = await session.list_tools()
-                
+
                 logger.info(f"✅ Получено {len(tools_response.tools)} инструментов")
-                
+
                 return tools_response.tools
