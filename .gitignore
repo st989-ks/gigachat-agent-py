@@ -1,2 +1,59 @@
+# Virtualenv
+venv/
+env/
+ENV/
 .venv
+
+# IDE
 .idea
+.vscode
+*.swp
+*.swo
+*~
+.DS_Store
+.mypy_cache
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing
+.pytest_cache/
+.coverage
+
+# Logs
+htmlcov/
+logs
+*.log
+
+# Data
+data
+
+# Environment
+.env
+.env.local
+
+# Misc
+structure-for-llm.txt
+*.iml
+.aider*
+
+!gigachat-agent-py.iml

@@ -1,5 +1,5 @@
-fastapi>=0.104.0
-uvicorn>=0.24.0
+fastapi
+uvicorn
 langchain-core==0.3.61
 langchain-gigachat==0.3.12
 mcp[cli]

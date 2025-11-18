@@ -1,6 +1,0 @@
-uvicorn
-httpx
-pydantic
-mcp[cli]
-fastapi
-aiohttp
