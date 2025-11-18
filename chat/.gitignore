@@ -5,8 +5,8 @@ ENV/
 .venv
 
 # IDE
-.idea/
-.vscode/
+.idea
+.vscode
 *.swp
 *.swo
 *~
@@ -38,9 +38,9 @@ wheels/
 # Testing
 .pytest_cache/
 .coverage
-htmlcov/
 
 # Logs
+htmlcov/
 logs
 *.log
 
@@ -55,3 +55,5 @@ data
 structure-for-llm.txt
 *.iml
 .aider*
+
+!gigachat-agent-py.iml
