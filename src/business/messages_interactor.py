@@ -1,26 +1,17 @@
 import logging
 from typing import List
 
-from fastapi import HTTPException
-from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage, AIMessage
-
-from src.ai.managers.giga_chat_manager import get_giga_chat_manager
 from src.business.standart_process import StandartProcess
 from src.db.db_manager import get_db_manager
-from src.model.agent import Agent
 from src.core.constants import CHATS_DEFAULT
 from src.model.chat import Chat, ChatList
 from src.business.mcp_processor import McpProcessor
-from src.model.chat_models import GigaChatModel, ModelProvideType
 from src.model.messages import (
     Message,
     MessageRequest,
     MessageList,
-    MessageType,
-    MessageOutput,
 )
 from src.model.tape_formats_response import FormatType
-from src.tools.time import get_time_now_h_m_s
 
 logger = logging.getLogger(__name__)
 

@@ -4,6 +4,7 @@ langchain-core==0.3.61
 langchain-gigachat==0.3.12
 mcp[cli]
 pydantic>=2.0.0
+pandas
 pandas-stubs
 mypy
 tiktoken

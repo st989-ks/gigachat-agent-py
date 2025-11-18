@@ -55,5 +55,5 @@ data
 structure-for-llm.txt
 *.iml
 .aider*
-
+!chat.iml
 !gigachat-agent-py.iml
