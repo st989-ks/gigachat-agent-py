@@ -1,5 +1,5 @@
 """
-Автоматическое сканирование и анализ Telegram группы через GigaChat MAX
+Автоматическое сканирование и анализ Telegram группы через Ollama
 Сканирует группу каждый час, получает 200 последних сообщений, анализирует и отправляет отчёт
 """
 
@@ -13,8 +13,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from langchain_core.messages import SystemMessage, HumanMessage
 from src.model.agent import Agent
-from src.model.chat_models import GigaChatModel
-from src.ai.managers.giga_chat_manager import get_giga_chat_manager
+from src.model.chat_models import OllamaModel
+from src.ai.managers.ollama_manager import get_ollama_manager
 
 logger = logging.getLogger(__name__)
 
@@ -22,12 +22,12 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TelegramScannerConfig:
     group_id: int = -2535311259                  # ID целевой группы (отрицательное число)
-    user_id: int = 488356801                     # Your User ID для получения отчётов
-    scan_period_secconds: int = 20
-    messages_limit: int = 200         # Количество последних сообщений
-    mcp_name: str = "telegram-mcp"         # Количество последних сообщений
-    mcp_server_url: str = "http://127.0.0.1:8000/sse"  # MCP сервер
-    mcp_transport: str = "sse"        # Тип транспорта (sse)
+    user_id: int = 488356801                     # Ваш User ID для получения отчётов
+    scan_period_seconds: int = 20               # Периодичность сканирования в секундах
+    messages_limit: int = 200                   # Количество последних сообщений
+    mcp_name: str = "telegram-mcp"              # Название инструмента MCP
+    mcp_server_url: str = "http://127.0.0.1:8000/sse"  # URL MCP-сервера
+    mcp_transport: str = "sse"                 # Транспорт (SSE)
 
 
 class TelegramGroupAnalyzer:
@@ -38,10 +38,10 @@ class TelegramGroupAnalyzer:
         
         self.analyzer_agent = Agent(
             agent_id="telegram_analyzer",
-            provider="gigachat",
+            provider="ollama",                      # Изменено на Ollama
             name="Telegram Group Analyzer",
             temperature=0.5,
-            model=GigaChatModel.MAX.value,
+            model=OllamaModel.MISTRAL.value,      # Пример использования Ollama-модели
             max_tokens=8000,
         )
         
@@ -52,7 +52,7 @@ class TelegramGroupAnalyzer:
         
         self.scheduler.add_job(
             self._scan_and_report,
-            IntervalTrigger(seconds=self.config.scan_period_secconds),
+            IntervalTrigger(seconds=self.config.scan_period_seconds),
             id="telegram_scan_hourly",
             name="периодическое сканирование Telegram группы",
             replace_existing=True,
@@ -61,7 +61,7 @@ class TelegramGroupAnalyzer:
         
         self.scheduler.start()
         logger.info(
-            f"✅ Scheduler запущен. Сканирование группы каждые {self.config.scan_period_secconds} секунд"
+            f"✅ Scheduler запущен. Сканирование группы каждые {self.config.scan_period_seconds} секунд"
         )
     
     async def shutdown_scheduler(self) -> None:
@@ -78,15 +78,9 @@ class TelegramGroupAnalyzer:
             system_prompt = self._build_system_prompt()
             user_query = self._build_user_query()
             
-            result = await get_giga_chat_manager().invoke_with_tools(
-                connections={
-                    self.config.mcp_name : {
-                        "url": self.config.mcp_server_url,
-                        "transport": self.config.mcp_transport,
-                    }
-                },
+            result = await get_ollama_manager().ainvoke(     # Вызываем Ollama-менеджер
                 agent=self.analyzer_agent,
-                input_messages=(system_prompt + user_query),
+                input_messages=[SystemMessage(content=system_prompt), HumanMessage(content=user_query)],
             )
             
             # Извлекаем результат анализа
@@ -163,7 +157,7 @@ class TelegramGroupAnalyzer:
 Группа: {self.config.group_id}
 Ошибка: {error_msg}
 
-Попытка будет повторена в следующий."""
+Попытка будет повторена в следующий раз."""
         
         logger.error(f"Отправка уведомления об ошибке: {error_report}")
 
