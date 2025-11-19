@@ -78,9 +78,21 @@ class TelegramGroupAnalyzer:
             system_prompt = self._build_system_prompt()
             user_query = self._build_user_query()
             
-            result = await get_ollama_manager().ainvoke(     # Вызываем Ollama-менеджер
+            # Передача настроек инструментов в вызов менеджера
+            result = await get_ollama_manager().ainvoke_with_tools(
                 agent=self.analyzer_agent,
-                input_messages=[SystemMessage(content=system_prompt), HumanMessage(content=user_query)],
+                input_messages=[
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=user_query)
+                ],
+                config={
+                    "mcp_tools": {
+                        self.config.mcp_name: {
+                            "url": self.config.mcp_server_url,
+                            "transport": self.config.mcp_transport,
+                        }
+                    }
+                }
             )
             
             # Извлекаем результат анализа

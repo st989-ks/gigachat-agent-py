@@ -31,8 +31,9 @@ class OllamaModelManager:
             model_type: OllamaModel,
             temperature: Optional[float] = None,
             max_tokens: Optional[int] = None,
+            mcp_tools: Optional[Dict[str, Any]] = None,  # Параметр для передачи инструментов MCP
     ) -> ChatOllama:
-        """Получить или создать экземпляр модели с кешированием"""
+        """Получить или создать экземпляр модели с кешированием и настройками инструментов"""
 
         # Используем last params если параметры не указаны
         if model_type in self._last_params:
@@ -95,6 +96,30 @@ class OllamaModelManager:
             model_type=OllamaModel(agent.model),
             temperature=agent.temperature,
             max_tokens=agent.max_tokens,
+        ).ainvoke(
+            input=input_messages,
+            config=config,
+            stop=stop,
+            **kwargs
+        )
+
+    async def ainvoke_with_tools(
+            self,
+            agent: Agent,
+            input_messages: LanguageModelInput,
+            config: Optional[RunnableConfig] = None,
+            *,
+            stop: Optional[list[str]] = None,
+            mcp_tools: Optional[Dict[str, Any]] = None,  # Параметр для передачи инструментов MCP
+            **kwargs: Any,
+    ) -> BaseMessage:
+        """Асинхронный вызов модели с передачей инструментов MCP"""
+        logger.info(f"OllamaModelManager ainvoke_with_tools [{agent.name}]")
+        return await self.get_model(
+            model_type=OllamaModel(agent.model),
+            temperature=agent.temperature,
+            max_tokens=agent.max_tokens,
+            mcp_tools=mcp_tools,  # Передаем инструменты в вызов модели
         ).ainvoke(
             input=input_messages,
             config=config,
