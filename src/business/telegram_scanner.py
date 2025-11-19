@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class TelegramScannerConfig:
     group_id: int = -2535311259                  # ID целевой группы (отрицательное число)
     user_id: int = 488356801                     # Your User ID для получения отчётов
-    scan_period_secconds: int = 60
+    scan_period_secconds: int = 20
     messages_limit: int = 200         # Количество последних сообщений
     mcp_name: str = "telegram-mcp"         # Количество последних сообщений
     mcp_server_url: str = "http://127.0.0.1:8000/sse"  # MCP сервер
@@ -78,12 +78,6 @@ class TelegramGroupAnalyzer:
             system_prompt = self._build_system_prompt()
             user_query = self._build_user_query()
             
-            # Подготавливаем сообщения для агента
-            messages = [
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=user_query),
-            ]
-            
             result = await get_giga_chat_manager().invoke_with_tools(
                 connections={
                     self.config.mcp_name : {
@@ -92,7 +86,7 @@ class TelegramGroupAnalyzer:
                     }
                 },
                 agent=self.analyzer_agent,
-                input_messages=messages,
+                input_messages=(system_prompt + user_query),
             )
             
             # Извлекаем результат анализа
@@ -169,7 +163,7 @@ class TelegramGroupAnalyzer:
 Группа: {self.config.group_id}
 Ошибка: {error_msg}
 
-Попытка будет повторена в следующий час."""
+Попытка будет повторена в следующий."""
         
         logger.error(f"Отправка уведомления об ошибке: {error_report}")
 
