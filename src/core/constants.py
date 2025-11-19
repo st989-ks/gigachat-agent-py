@@ -38,4 +38,10 @@ CHATS_DEFAULT: Final[list[Chat]] =[
         created_at=None,
         system_prompt="Ты — агент для работы с MCP инструментами. Помогай пользователю использовать доступные инструменты."
     ),
+    Chat(
+        id="12",
+        name="DAY_12_TELEGA",
+        system_prompt = None,
+        created_at=None
+    ),
 ] 

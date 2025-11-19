@@ -1,6 +1,7 @@
 fastapi
 uvicorn
 langgraph
+apscheduler
 langchain-mcp-adapters
 langgraph-prebuilt
 langchain-core==0.3.61
