@@ -254,3 +254,6 @@ def setup_giga_chat_manager(
     manager.credentials = credentials
     manager.verify_ssl_certs = verify_ssl_certs
     return manager
+```
+
+src/business/telegram_scanner.py
