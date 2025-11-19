@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class TelegramScannerConfig:
-    group_id: int = 2535311259                  # ID целевой группы (отрицательное число)
+    group_id: int = -2535311259                  # ID целевой группы (отрицательное число)
     user_id: int = 488356801                     # Your User ID для получения отчётов
     scan_period_secconds: int = 60
     messages_limit: int = 200         # Количество последних сообщений
@@ -54,14 +54,14 @@ class TelegramGroupAnalyzer:
             self._scan_and_report,
             IntervalTrigger(seconds=self.config.scan_period_secconds),
             id="telegram_scan_hourly",
-            name="Ежечасное сканирование Telegram группы",
+            name="периодическое сканирование Telegram группы",
             replace_existing=True,
             misfire_grace_time=60,
         )
         
         self.scheduler.start()
         logger.info(
-            f"✅ Scheduler запущен. Сканирование группы в {self.config.scan_period_secconds}:00 каждый час"
+            f"✅ Scheduler запущен. Сканирование группы каждые {self.config.scan_period_secconds} секунд"
         )
     
     async def shutdown_scheduler(self) -> None:
