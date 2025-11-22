@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 import asyncio
 from functools import partial
 
-from src.core.configs import settings
+from src.chat.core.configs import settings
 
 logger = logging.getLogger(__name__)
 

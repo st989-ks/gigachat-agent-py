@@ -8,15 +8,15 @@ from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.prompt_values import PromptValue
 from langchain_core.runnables import RunnableConfig
 
-from src.model.agent import Agent
-from src.model.chat_models import GigaChatModel
+from src.chat.model.agent import Agent
+from src.chat.model.chat_models import GigaChatModel
 from langchain_gigachat.chat_models import GigaChat
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.sessions import Connection
 from langgraph.prebuilt import create_react_agent
 
 
-from src.model.messages import MessageOutput
+from src.chat.model.messages import MessageOutput
 
 logger = logging.getLogger(__name__)
 

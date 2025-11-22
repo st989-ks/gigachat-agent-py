@@ -4,9 +4,9 @@ from pathlib import Path
 from sqlite3 import Connection, Cursor
 from typing import List, Optional
 
-from src.model.chat import Chat
-from src.core.constants import CHATS_DEFAULT
-from src.model.messages import Message, MessageType
+from src.chat.model.chat import Chat
+from src.chat.core.constants import CHATS_DEFAULT
+from src.chat.model.messages import Message, MessageType
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class DbManager:
 
     def __init__(self, db_dir: Optional[Path] = None) -> None:
         if db_dir is None:
-            from src.core.configs import settings
+            from src.chat.core.configs import settings
             db_dir = settings.DB_DIR
 
         self.db_dir: Path = Path(db_dir)

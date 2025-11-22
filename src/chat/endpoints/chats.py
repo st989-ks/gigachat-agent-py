@@ -5,12 +5,11 @@ from fastapi import APIRouter, HTTPException
 from starlette.responses import Response
 from starlette.requests import Request
 
-from src.business.verify import verify
-from src.business.messages_interactor import get_all_chats, get_all_messages_chat
-from src.core.constants import KEY_SELECTED_CHAT, KEY_SESSION_ID, KEY_PASSWORD_SALT, ONE_DAY_IN_SECONDS
-from src.model.messages import MessageList
-from src.model.chat import ChatList, Chat, ChatIdRequest
-from src.model.common import StandardResponse
+from src.chat.business.verify import verify
+from src.chat.business.messages_interactor import get_all_chats, get_all_messages_chat
+from src.chat.core.constants import KEY_SELECTED_CHAT, ONE_DAY_IN_SECONDS
+from src.chat.model.messages import MessageList
+from src.chat.model.chat import ChatList, ChatIdRequest
 
 router = APIRouter()
 

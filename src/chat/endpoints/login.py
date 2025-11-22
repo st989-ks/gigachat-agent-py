@@ -4,10 +4,10 @@ from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
 from starlette.responses import Response, JSONResponse
 
-from src.business.session_interactor import get_session_manager
-from src.core.constants import KEY_PASSWORD_SALT, KEY_SESSION_ID, ONE_DAY_IN_SECONDS
-from src.model.common import StandardResponse
-from src.model.verify import AuthResponse
+from src.chat.business.session_interactor import get_session_manager
+from src.chat.core.constants import KEY_PASSWORD_SALT, KEY_SESSION_ID, ONE_DAY_IN_SECONDS
+from src.chat.model.common import StandardResponse
+from src.chat.model.verify import AuthResponse
 
 router = APIRouter()
 

@@ -1,20 +1,20 @@
 import logging
 from typing import List
 
-from src.business.standart_process import StandartProcess
-from src.db.db_manager import get_db_manager
-from src.core.constants import CHATS_DEFAULT
-from src.model.chat import Chat, ChatList
-from src.business.mcp_processor import McpProcessor
-from src.business.telegram_scanner import stop_scanner_service, start_scanner_service, get_scanner_service
-from src.tools.time import get_time_now_h_m_s
-from src.model.messages import (
+from src.chat.business.standart_process import StandartProcess
+from src.chat.db.db_manager import get_db_manager
+from src.chat.core.constants import CHATS_DEFAULT
+from src.chat.model.chat import Chat, ChatList
+from src.chat.business.mcp_processor import McpProcessor
+from src.chat.business.telegram_scanner import stop_scanner_service, start_scanner_service, get_scanner_service
+from src.chat.tools.time import get_time_now_h_m_s
+from src.chat.model.messages import (
     Message,
     MessageRequest,
     MessageList,
     MessageType
 )
-from src.model.tape_formats_response import FormatType
+from src.chat.model.tape_formats_response import FormatType
 
 logger = logging.getLogger(__name__)
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from src.core.configs import settings
-from src.tools.make_structure import collect_project_text
+from src.chat.core.configs import settings
+from src.chat.tools.make_structure import collect_project_text
 
 
 def main()-> None:

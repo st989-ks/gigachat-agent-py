@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from typing import Final
-from src.model.chat import Chat
+from src.chat.model.chat import Chat
 from datetime import datetime
 
 KEY_SELECTED_CHAT: Final[str] = "KEY_SELECTED_CHAT"

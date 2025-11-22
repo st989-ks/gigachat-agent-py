@@ -12,17 +12,17 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
 
-from src.core.constants import KEY_SESSION_ID, ONE_DAY_IN_SECONDS
-from src.endpoints.login import router as router_login
-from src.endpoints.root import router as router_root
-from src.endpoints.chats import router as router_chats
-from src.endpoints.format import router as router_format
-from src.endpoints.messages import router as router_messages
-from src.model.error import ErrorDetail, ErrorResponse
-from src.ai.managers.giga_chat_manager import setup_giga_chat_manager
-from src.core.configs import settings
-from src.core.logging_config import setup_logging
-from src.db.db_manager import get_db_manager
+from src.chat.core.constants import KEY_SESSION_ID, ONE_DAY_IN_SECONDS
+from src.chat.endpoints.login import router as router_login
+from src.chat.endpoints.root import router as router_root
+from src.chat.endpoints.chats import router as router_chats
+from src.chat.endpoints.format import router as router_format
+from src.chat.endpoints.messages import router as router_messages
+from src.chat.model.error import ErrorDetail, ErrorResponse
+from src.chat.ai.managers.giga_chat_manager import setup_giga_chat_manager
+from src.chat.core.configs import settings
+from src.chat.core.logging_config import setup_logging
+from src.chat.db.db_manager import get_db_manager
 
 logger = logging.getLogger(__name__)
 

@@ -4,10 +4,10 @@ from fastapi import APIRouter
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, Response
 
-from src.core.configs import settings
-from src.core.constants import KEY_SELECTED_CHAT, KEY_SELECTED_FORMAT_TYPE_REQUEST, ONE_DAY_IN_SECONDS, \
+from src.chat.core.configs import settings
+from src.chat.core.constants import KEY_SELECTED_CHAT, KEY_SELECTED_FORMAT_TYPE_REQUEST, ONE_DAY_IN_SECONDS, \
     KEY_SESSION_ID, KEY_PASSWORD_SALT, CHATS_DEFAULT
-from src.model.tape_formats_response import FormatType
+from src.chat.model.tape_formats_response import FormatType
 
 router = APIRouter()
 

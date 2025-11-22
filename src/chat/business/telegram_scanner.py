@@ -12,9 +12,9 @@ from dataclasses import dataclass
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from langchain_core.messages import SystemMessage, HumanMessage
-from src.model.agent import Agent
-from src.model.chat_models import OllamaModel
-from src.ai.managers.ollama_manager import get_ollama_manager
+from src.chat.model.agent import Agent
+from src.chat.model.chat_models import OllamaModel
+from src.chat.ai.managers.ollama_manager import get_ollama_manager
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class TelegramScannerConfig:
     group_id: int = -2535311259                  # ID целевой группы (отрицательное число)
     user_id: int = 488356801                     # Ваш User ID для получения отчётов
-    scan_period_seconds: int = 20               # Периодичность сканирования в секундах
+    scan_period_seconds: int = 60               # Периодичность сканирования в секундах
     messages_limit: int = 200                   # Количество последних сообщений
     mcp_name: str = "telegram-mcp"              # Название инструмента MCP
     mcp_server_url: str = "http://127.0.0.1:8000/sse"  # URL MCP-сервера
@@ -41,7 +41,7 @@ class TelegramGroupAnalyzer:
             provider="ollama",                      # Изменено на Ollama
             name="Telegram Group Analyzer",
             temperature=0.5,
-            model=OllamaModel.MISTRAL.value,      # Пример использования Ollama-модели
+            model=OllamaModel.MISTRAL_7B.value,      # Пример использования Ollama-модели
             max_tokens=8000,
         )
         
@@ -79,19 +79,17 @@ class TelegramGroupAnalyzer:
             user_query = self._build_user_query()
             
             # Передача настроек инструментов в вызов менеджера
-            result = await get_ollama_manager().ainvoke_with_tools(
+            result = await get_ollama_manager().invoke_with_tools(
                 agent=self.analyzer_agent,
                 input_messages=[
                     SystemMessage(content=system_prompt),
                     HumanMessage(content=user_query)
                 ],
-                config={
-                    "mcp_tools": {
-                        self.config.mcp_name: {
+                connections={
+                     self.config.mcp_name: {
                             "url": self.config.mcp_server_url,
                             "transport": self.config.mcp_transport,
                         }
-                    }
                 }
             )
             
@@ -168,9 +166,8 @@ class TelegramGroupAnalyzer:
 Время: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 Группа: {self.config.group_id}
 Ошибка: {error_msg}
-
 Попытка будет повторена в следующий раз."""
-        
+
         logger.error(f"Отправка уведомления об ошибке: {error_report}")
 
 

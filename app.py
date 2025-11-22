@@ -4,6 +4,7 @@ import subprocess
 import sys
 import os
 
+
 def _install_dependency() -> None:
     """
     Установит зависимости из requirements.txt если они не установлены.
@@ -23,9 +24,10 @@ def _install_dependency() -> None:
         print(result.stderr)
         sys.exit(1)
 
+
 if __name__ == "__main__":
     _install_dependency()
-    from src.main import main
+    from src.chat.main import main
     import asyncio
-    asyncio.run(main())
 
+    asyncio.run(main())

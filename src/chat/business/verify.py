@@ -3,8 +3,8 @@ import logging
 from starlette.requests import Request
 from fastapi import HTTPException
 
-from src.business.session_interactor import get_session_manager
-from src.core.constants import KEY_SESSION_ID, KEY_PASSWORD_SALT
+from src.chat.business.session_interactor import get_session_manager
+from src.chat.core.constants import KEY_SESSION_ID, KEY_PASSWORD_SALT
 
 logger = logging.getLogger(__name__)
 

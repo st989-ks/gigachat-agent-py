@@ -2,7 +2,7 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
-from src.model.tape_formats_response import FormatType
+from src.chat.model.tape_formats_response import FormatType
 
 
 class FormatTypeListResponse(BaseModel):

@@ -7,13 +7,13 @@ from typing import Dict
 from pandas import DataFrame
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from src.ai.managers.huggingface_manager import get_hf_manager
-from src.ai.managers.ollama_manager import get_ollama_manager
-from src.core.configs import settings
-from src.core.logging_config import setup_logging
-from src.model.agent import Agent
-from src.model.chat_models import OllamaModel, HuggingFaceModel
-from src.tools.tokenizer import get_token_counter
+from src.chat.ai.managers.huggingface_manager import get_hf_manager
+from src.chat.ai.managers.ollama_manager import get_ollama_manager
+from src.chat.core.configs import settings
+from src.chat.core.logging_config import setup_logging
+from src.chat.model.agent import Agent
+from src.chat.model.chat_models import OllamaModel, HuggingFaceModel
+from src.chat.tools.tokenizer import get_token_counter
 
 # Конфигурация тестов
 TEST_PROMPT = "Объясни разницу между машинным обучением и глубоким обучением простыми словами."

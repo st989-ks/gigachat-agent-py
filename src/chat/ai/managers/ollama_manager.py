@@ -1,11 +1,16 @@
 import logging
+import time
 from typing import Dict, Optional, Tuple, Any
 from langchain_ollama import ChatOllama
 from langchain_core.language_models import LanguageModelInput
 from langchain_core.messages import BaseMessage
 from langchain_core.runnables import RunnableConfig
-from src.model.agent import Agent
-from src.model.chat_models import OllamaModel
+from src.chat.model.agent import Agent
+from src.chat.model.chat_models import OllamaModel
+from src.chat.model.messages import MessageOutput
+from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_mcp_adapters.sessions import Connection
+from langgraph.prebuilt import create_react_agent
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +36,6 @@ class OllamaModelManager:
             model_type: OllamaModel,
             temperature: Optional[float] = None,
             max_tokens: Optional[int] = None,
-            mcp_tools: Optional[Dict[str, Any]] = None,  # Параметр для передачи инструментов MCP
     ) -> ChatOllama:
         """Получить или создать экземпляр модели с кешированием и настройками инструментов"""
 
@@ -103,28 +107,39 @@ class OllamaModelManager:
             **kwargs
         )
 
-    async def ainvoke_with_tools(
+    async def invoke_with_tools(
             self,
+            connections: dict[str, Connection],
             agent: Agent,
             input_messages: LanguageModelInput,
-            config: Optional[RunnableConfig] = None,
-            *,
-            stop: Optional[list[str]] = None,
-            mcp_tools: Optional[Dict[str, Any]] = None,  # Параметр для передачи инструментов MCP
-            **kwargs: Any,
-    ) -> BaseMessage:
-        """Асинхронный вызов модели с передачей инструментов MCP"""
-        logger.info(f"OllamaModelManager ainvoke_with_tools [{agent.name}]")
-        return await self.get_model(
+    ) -> MessageOutput:
+        logger.info("GigaChatModelManager invoke with tools")
+
+        model = self.get_model(
             model_type=OllamaModel(agent.model),
             temperature=agent.temperature,
             max_tokens=agent.max_tokens,
-            mcp_tools=mcp_tools,  # Передаем инструменты в вызов модели
-        ).ainvoke(
-            input=input_messages,
-            config=config,
-            stop=stop,
-            **kwargs
+        )
+
+        start_time: float = time.time()
+
+        client = MultiServerMCPClient(connections=connections)
+
+        tools = await client.get_tools()
+        
+        react_agent = create_react_agent(model, tools)
+
+        agent_output:dict = await react_agent.ainvoke(input={"messages": input_messages})
+        logger.info(f"[agent_output] {agent_output}")
+        response: BaseMessage = agent_output["messages"][-1] 
+
+        return MessageOutput(
+            message=response,
+            prompt_tokens=0,
+            completion_tokens=0,
+            request_time=0,
+            price=0,
+            meta="Agent with MCP tools invoked"
         )
 
 

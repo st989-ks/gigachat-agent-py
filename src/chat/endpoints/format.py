@@ -5,12 +5,12 @@ from starlette.requests import Request
 
 from fastapi import APIRouter
 
-from src.business.verify import verify
-from src.core.constants import KEY_SESSION_ID, KEY_PASSWORD_SALT, KEY_SELECTED_FORMAT_TYPE_REQUEST, ONE_DAY_IN_SECONDS, \
+from src.chat.business.verify import verify
+from src.chat.core.constants import KEY_SELECTED_FORMAT_TYPE_REQUEST, ONE_DAY_IN_SECONDS, \
     KEY_SELECTED_FORMAT_REQUEST
-from src.model.common import StandardResponse
-from src.model.format import FormatTypeRequest, FormatTypeListResponse
-from src.model.tape_formats_response import FormatType
+from src.chat.model.common import StandardResponse
+from src.chat.model.format import FormatTypeRequest, FormatTypeListResponse
+from src.chat.model.tape_formats_response import FormatType
 
 router = APIRouter()
 

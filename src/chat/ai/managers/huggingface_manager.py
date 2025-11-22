@@ -5,7 +5,7 @@ from huggingface_hub import AsyncInferenceClient
 from langchain_core.language_models import LanguageModelInput
 from langchain_core.messages import BaseMessage, AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
-from src.model.agent import Agent
+from src.chat.model.agent import Agent
 
 logger = logging.getLogger(__name__)
 
